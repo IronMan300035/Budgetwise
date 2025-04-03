@@ -14,7 +14,8 @@ import {
   Wallet,
   Landmark,
   MessageSquare,
-  Settings
+  Settings,
+  Activity
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -103,6 +104,9 @@ export default function Navbar() {
                       <Link to="/profile">Profile</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
+                      <Link to="/activity-log">Activity Log</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
                       <Link to="/settings">Settings</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
@@ -162,6 +166,13 @@ export default function Navbar() {
                   className="block px-3 py-2 rounded-md text-base font-medium text-foreground/70 hover:bg-accent/50 hover:text-foreground"
                 >
                   Profile
+                </Link>
+                <Link
+                  to="/activity-log"
+                  onClick={toggleMenu}
+                  className="block px-3 py-2 rounded-md text-base font-medium text-foreground/70 hover:bg-accent/50 hover:text-foreground"
+                >
+                  Activity Log
                 </Link>
                 <Link
                   to="/settings"

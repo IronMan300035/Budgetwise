@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/context/AuthContext";
 import { useInvestments } from "@/hooks/useInvestments";
+import { InvestmentCard } from "@/components/InvestmentCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,12 +13,16 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trash2, TrendingUp, TrendingDown, RefreshCw, LineChart, BarChart4, ChevronUp, ChevronDown, DollarSign, Coins, Landmark, Wallet, ArrowRight, Calendar, Plus } from "lucide-react";
+import { 
+  Trash2, TrendingUp, TrendingDown, RefreshCw, LineChart, BarChart4, ChevronUp, ChevronDown, 
+  DollarSign, Coins, Landmark, Wallet, ArrowRight, Calendar, Plus, Activity, AlertTriangle,
+  Briefcase, PiggyBank, Check, BarChart, Bookmark
+} from "lucide-react";
 import { format } from "date-fns";
 import {
   LineChart as RechartsLineChart,
   Line,
-  BarChart,
+  BarChart as RechartsBarChart,
   Bar,
   PieChart,
   Pie,
@@ -28,7 +33,11 @@ import {
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
   Legend,
+  Area,
+  AreaChart,
 } from "recharts";
+import { CurrencyUtils } from "@/components/CurrencyToggle";
+import { toast } from "sonner";
 
 const mockMarketData = {
   indices: [
@@ -59,6 +68,48 @@ const mockMarketData = {
     { date: "Apr 5", nifty: 22400, sensex: 73800, bitcoin: 4780000 },
     { date: "Apr 6", nifty: 22500, sensex: 74100, bitcoin: 4800000 },
     { date: "Apr 7", nifty: 22651, sensex: 74501, bitcoin: 4825250 },
+  ],
+  mutualFunds: [
+    {
+      name: "Axis Bluechip Fund",
+      category: "Large Cap",
+      nav: 58.23,
+      returns1y: 14.8,
+      returns3y: 42.5,
+      risk: "Moderate",
+      minInvestment: 1000,
+      amc: "Axis Mutual Fund"
+    },
+    {
+      name: "Mirae Asset Emerging Bluechip",
+      category: "Large & Mid Cap",
+      nav: 103.45,
+      returns1y: 18.2,
+      returns3y: 51.3,
+      risk: "High",
+      minInvestment: 1000,
+      amc: "Mirae Asset"
+    },
+    {
+      name: "SBI Small Cap Fund",
+      category: "Small Cap",
+      nav: 125.82,
+      returns1y: 21.7,
+      returns3y: 65.8,
+      risk: "Very High",
+      minInvestment: 5000,
+      amc: "SBI Mutual Fund"
+    },
+    {
+      name: "Parag Parikh Flexi Cap Fund",
+      category: "Flexi Cap",
+      nav: 68.45,
+      returns1y: 16.9,
+      returns3y: 48.2,
+      risk: "Moderately High",
+      minInvestment: 1000,
+      amc: "PPFAS Mutual Fund"
+    }
   ]
 };
 
@@ -99,6 +150,24 @@ const investmentOptions = [
     risk: "Very High",
     minInvestment: "₹100"
   },
+  {
+    title: "Fixed Deposits",
+    description: "Safe and guaranteed returns with bank deposits",
+    icon: Wallet,
+    color: "#10b981",
+    returns: "5-7% p.a.",
+    risk: "Very Low",
+    minInvestment: "₹1,000"
+  },
+  {
+    title: "Government Bonds",
+    description: "Sovereign debt securities with fixed interest payments",
+    icon: Briefcase,
+    color: "#6366f1",
+    returns: "7-8% p.a.",
+    risk: "Low",
+    minInvestment: "₹1,000"
+  }
 ];
 
 const CHART_COLORS = ["#4f46e5", "#0891b2", "#0d9488", "#f59e0b", "#dc2626", "#8b5cf6"];
@@ -110,6 +179,9 @@ export default function Investment() {
   
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isMarketLoading, setIsMarketLoading] = useState(true);
+  const [activeMutualFund, setActiveMutualFund] = useState<any>(null);
+  const [isMutualFundDetailOpen, setIsMutualFundDetailOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("stocks");
   
   const [investType, setInvestType] = useState<"sip" | "stock" | "mutual_fund" | "crypto" | "other">("stock");
   const [name, setName] = useState("");
@@ -142,7 +214,10 @@ export default function Investment() {
   };
   
   const handleAddInvestment = async () => {
-    if (!name || !amount) return;
+    if (!name || !amount) {
+      toast.error("Please fill in required fields");
+      return;
+    }
     
     await addInvestment({
       type: investType,
@@ -169,6 +244,21 @@ export default function Investment() {
     value: investmentsByType[type]
   }));
   
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'sip': return <Calendar className="h-4 w-4 mr-2 text-indigo-600" />;
+      case 'stock': return <Landmark className="h-4 w-4 mr-2 text-blue-600" />;
+      case 'mutual_fund': return <BarChart4 className="h-4 w-4 mr-2 text-teal-600" />;
+      case 'crypto': return <Coins className="h-4 w-4 mr-2 text-amber-600" />;
+      default: return <DollarSign className="h-4 w-4 mr-2 text-gray-600" />;
+    }
+  };
+  
+  const openMutualFundDetail = (fund: any) => {
+    setActiveMutualFund(fund);
+    setIsMutualFundDetailOpen(true);
+  };
+  
   if (authLoading || investmentsLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
@@ -185,7 +275,10 @@ export default function Investment() {
       <main className="flex-1 py-8 px-4 md:px-8">
         <div className="container mx-auto">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
-            <h1 className="text-3xl font-bold mb-2 md:mb-0 bg-gradient-to-r from-indigo-600 to-purple-600 text-transparent bg-clip-text">Investment Portfolio</h1>
+            <div>
+              <h1 className="text-3xl font-bold mb-2 md:mb-0 bg-gradient-to-r from-indigo-600 to-purple-600 text-transparent bg-clip-text">Investment Portfolio</h1>
+              <p className="text-muted-foreground">Grow your wealth with smart investments</p>
+            </div>
             
             <Button 
               onClick={() => setIsAddOpen(true)}
@@ -282,9 +375,15 @@ export default function Investment() {
             </Card>
             
             <Card className="col-span-1 md:col-span-2 overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-              <CardHeader>
-                <CardTitle>Market Trends</CardTitle>
-                <CardDescription>Historical performance of major indices</CardDescription>
+              <CardHeader className="flex flex-row justify-between items-start">
+                <div>
+                  <CardTitle>Market Trends</CardTitle>
+                  <CardDescription>Historical performance of major indices</CardDescription>
+                </div>
+                <Button variant="outline" size="sm" className="flex items-center gap-1">
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  <span>Refresh</span>
+                </Button>
               </CardHeader>
               <CardContent className="h-80">
                 {isMarketLoading ? (
@@ -294,17 +393,50 @@ export default function Investment() {
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <RechartsLineChart data={mockMarketData.historicalData} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
+                    <AreaChart data={mockMarketData.historicalData} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
+                      <defs>
+                        <linearGradient id="niftyGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#4f46e5" stopOpacity={0.1}/>
+                        </linearGradient>
+                        <linearGradient id="sensexGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#0891b2" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#0891b2" stopOpacity={0.1}/>
+                        </linearGradient>
+                      </defs>
                       <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                       <XAxis dataKey="date" />
-                      <YAxis yAxisId="left" />
+                      <YAxis yAxisId="left" domain={['auto', 'auto']} />
                       <YAxis yAxisId="right" orientation="right" domain={[4500000, 5000000]} />
                       <RechartsTooltip />
                       <Legend />
-                      <Line yAxisId="left" type="monotone" dataKey="nifty" name="NIFTY 50" stroke="#4f46e5" activeDot={{ r: 8 }} />
-                      <Line yAxisId="left" type="monotone" dataKey="sensex" name="SENSEX" stroke="#0891b2" />
-                      <Line yAxisId="right" type="monotone" dataKey="bitcoin" name="Bitcoin (₹)" stroke="#f59e0b" />
-                    </RechartsLineChart>
+                      <Area 
+                        yAxisId="left" 
+                        type="monotone" 
+                        dataKey="nifty" 
+                        name="NIFTY 50" 
+                        stroke="#4f46e5"
+                        fillOpacity={1} 
+                        fill="url(#niftyGradient)" 
+                      />
+                      <Area 
+                        yAxisId="left" 
+                        type="monotone" 
+                        dataKey="sensex" 
+                        name="SENSEX" 
+                        stroke="#0891b2"
+                        fillOpacity={1} 
+                        fill="url(#sensexGradient)" 
+                      />
+                      <Line 
+                        yAxisId="right" 
+                        type="monotone" 
+                        dataKey="bitcoin" 
+                        name="Bitcoin (₹)" 
+                        stroke="#f59e0b" 
+                        dot={{ r: 4 }}
+                      />
+                    </AreaChart>
                   </ResponsiveContainer>
                 )}
               </CardContent>
@@ -318,57 +450,28 @@ export default function Investment() {
               <CardDescription>Explore various investment opportunities</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {investmentOptions.map((option, index) => {
-                  const IconComponent = option.icon;
-                  return (
-                    <Card key={index} className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-all">
-                      <div className="flex p-6">
-                        <div className="mr-4">
-                          <div 
-                            className="h-12 w-12 rounded-lg flex items-center justify-center"
-                            style={{ backgroundColor: `${option.color}20`, color: option.color }}
-                          >
-                            <IconComponent className="h-6 w-6" />
-                          </div>
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg mb-1">{option.title}</h3>
-                          <p className="text-sm text-muted-foreground mb-4">{option.description}</p>
-                          <div className="grid grid-cols-3 gap-2 text-sm mb-4">
-                            <div>
-                              <div className="text-muted-foreground">Returns</div>
-                              <div className="font-medium">{option.returns}</div>
-                            </div>
-                            <div>
-                              <div className="text-muted-foreground">Risk</div>
-                              <div className="font-medium">{option.risk}</div>
-                            </div>
-                            <div>
-                              <div className="text-muted-foreground">Min. Investment</div>
-                              <div className="font-medium">{option.minInvestment}</div>
-                            </div>
-                          </div>
-                          <Button 
-                            onClick={() => {
-                              setInvestType(
-                                option.title.toLowerCase().includes('sip') ? 'sip' :
-                                option.title.toLowerCase().includes('stocks') ? 'stock' :
-                                option.title.toLowerCase().includes('mutual') ? 'mutual_fund' :
-                                option.title.toLowerCase().includes('crypto') ? 'crypto' : 'other'
-                              );
-                              setIsAddOpen(true);
-                            }}
-                            className="w-full"
-                            style={{ backgroundColor: option.color }}
-                          >
-                            Invest Now
-                          </Button>
-                        </div>
-                      </div>
-                    </Card>
-                  );
-                })}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {investmentOptions.map((option, index) => (
+                  <InvestmentCard
+                    key={index}
+                    title={option.title}
+                    description={option.description}
+                    icon={option.icon}
+                    color={option.color}
+                    returns={option.returns}
+                    risk={option.risk}
+                    minInvestment={option.minInvestment}
+                    onClick={() => {
+                      setInvestType(
+                        option.title.toLowerCase().includes('sip') ? 'sip' :
+                        option.title.toLowerCase().includes('stocks') ? 'stock' :
+                        option.title.toLowerCase().includes('mutual') ? 'mutual_fund' :
+                        option.title.toLowerCase().includes('crypto') ? 'crypto' : 'other'
+                      );
+                      setIsAddOpen(true);
+                    }}
+                  />
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -412,11 +515,7 @@ export default function Investment() {
                           <tr key={investment.id} className="border-t hover:bg-muted/30">
                             <td className="px-4 py-3 capitalize">
                               <div className="flex items-center">
-                                {investment.type === 'sip' && <Calendar className="h-4 w-4 mr-2 text-indigo-600" />}
-                                {investment.type === 'stock' && <Landmark className="h-4 w-4 mr-2 text-blue-600" />}
-                                {investment.type === 'mutual_fund' && <BarChart4 className="h-4 w-4 mr-2 text-teal-600" />}
-                                {investment.type === 'crypto' && <Coins className="h-4 w-4 mr-2 text-amber-600" />}
-                                {investment.type === 'other' && <DollarSign className="h-4 w-4 mr-2 text-gray-600" />}
+                                {getTypeIcon(investment.type)}
                                 {investment.type.replace('_', ' ')}
                               </div>
                             </td>
@@ -464,7 +563,7 @@ export default function Investment() {
               <CardDescription>Latest market data & trends</CardDescription>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="stocks" className="space-y-6">
+              <Tabs defaultValue="stocks" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                 <TabsList className="grid w-full max-w-md grid-cols-3">
                   <TabsTrigger value="stocks">Stocks</TabsTrigger>
                   <TabsTrigger value="crypto">Crypto</TabsTrigger>
@@ -519,61 +618,39 @@ export default function Investment() {
                 <TabsContent value="mutual_funds">
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-base">Axis Bluechip Fund Direct Growth</CardTitle>
-                          <CardDescription>Large Cap</CardDescription>
-                        </CardHeader>
-                        <CardContent className="pb-2">
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <div className="text-sm text-muted-foreground">NAV</div>
-                              <div className="font-medium">₹58.23</div>
+                      {mockMarketData.mutualFunds.map((fund, index) => (
+                        <Card key={index}>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-base">{fund.name}</CardTitle>
+                            <CardDescription>{fund.category}</CardDescription>
+                          </CardHeader>
+                          <CardContent className="pb-2">
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <div className="text-sm text-muted-foreground">NAV</div>
+                                <div className="font-medium">₹{fund.nav}</div>
+                              </div>
+                              <div>
+                                <div className="text-sm text-muted-foreground">1Y Returns</div>
+                                <div className="font-medium text-green-600">+{fund.returns1y}%</div>
+                              </div>
+                              <div>
+                                <div className="text-sm text-muted-foreground">Risk</div>
+                                <div className="font-medium">{fund.risk}</div>
+                              </div>
                             </div>
-                            <div>
-                              <div className="text-sm text-muted-foreground">1Y Returns</div>
-                              <div className="font-medium text-green-600">+14.8%</div>
-                            </div>
-                            <div>
-                              <div className="text-sm text-muted-foreground">Risk</div>
-                              <div className="font-medium">Moderate</div>
-                            </div>
-                          </div>
-                        </CardContent>
-                        <CardFooter>
-                          <Button className="w-full" variant="outline">
-                            View Details <ArrowRight className="h-4 w-4 ml-1" />
-                          </Button>
-                        </CardFooter>
-                      </Card>
-                      
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-base">Mirae Asset Emerging Bluechip</CardTitle>
-                          <CardDescription>Large & Mid Cap</CardDescription>
-                        </CardHeader>
-                        <CardContent className="pb-2">
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <div className="text-sm text-muted-foreground">NAV</div>
-                              <div className="font-medium">₹103.45</div>
-                            </div>
-                            <div>
-                              <div className="text-sm text-muted-foreground">1Y Returns</div>
-                              <div className="font-medium text-green-600">+18.2%</div>
-                            </div>
-                            <div>
-                              <div className="text-sm text-muted-foreground">Risk</div>
-                              <div className="font-medium">High</div>
-                            </div>
-                          </div>
-                        </CardContent>
-                        <CardFooter>
-                          <Button className="w-full" variant="outline">
-                            View Details <ArrowRight className="h-4 w-4 ml-1" />
-                          </Button>
-                        </CardFooter>
-                      </Card>
+                          </CardContent>
+                          <CardFooter>
+                            <Button 
+                              className="w-full" 
+                              variant="outline"
+                              onClick={() => openMutualFundDetail(fund)}
+                            >
+                              View Details <ArrowRight className="h-4 w-4 ml-1" />
+                            </Button>
+                          </CardFooter>
+                        </Card>
+                      ))}
                     </div>
                     
                     <div className="text-center">
@@ -583,6 +660,31 @@ export default function Investment() {
                 </TabsContent>
               </Tabs>
             </CardContent>
+          </Card>
+          
+          {/* Financial Education Banner */}
+          <Card className="overflow-hidden shadow-lg mb-8 bg-gradient-to-r from-indigo-600 to-blue-700 text-white">
+            <div className="p-6 sm:p-10 flex flex-col md:flex-row items-center gap-6">
+              <div className="md:w-2/3">
+                <h2 className="text-2xl font-bold mb-4">Financial Education Hub</h2>
+                <p className="mb-6 opacity-90">
+                  Access free courses, webinars, and resources to enhance your investment knowledge and make informed financial decisions.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <Button className="bg-white text-indigo-700 hover:bg-indigo-100">
+                    <Bookmark className="h-4 w-4 mr-1" /> Free Courses
+                  </Button>
+                  <Button variant="outline" className="border-white text-white hover:bg-white/20">
+                    <Activity className="h-4 w-4 mr-1" /> Market Insights
+                  </Button>
+                </div>
+              </div>
+              <div className="flex justify-center md:w-1/3 md:justify-end">
+                <div className="w-40 h-40 rounded-full bg-white/20 flex items-center justify-center">
+                  <BarChart className="h-20 w-20 text-white" />
+                </div>
+              </div>
+            </div>
           </Card>
           
           {/* Add Investment Dialog */}
@@ -697,6 +799,104 @@ export default function Investment() {
                 <Button onClick={handleAddInvestment}>Add Investment</Button>
               </DialogFooter>
             </DialogContent>
+          </Dialog>
+          
+          {/* Mutual Fund Detail Dialog */}
+          <Dialog open={isMutualFundDetailOpen} onOpenChange={setIsMutualFundDetailOpen}>
+            {activeMutualFund && (
+              <DialogContent className="sm:max-w-[700px]">
+                <DialogHeader>
+                  <DialogTitle>{activeMutualFund.name}</DialogTitle>
+                  <DialogDescription>{activeMutualFund.category} - {activeMutualFund.amc}</DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-6">
+                    <div className="space-y-1">
+                      <p className="text-sm text-muted-foreground">Current NAV</p>
+                      <p className="text-xl font-semibold">₹{activeMutualFund.nav}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm text-muted-foreground">1Y Returns</p>
+                      <p className="text-xl font-semibold text-green-600">+{activeMutualFund.returns1y}%</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm text-muted-foreground">3Y Returns</p>
+                      <p className="text-xl font-semibold text-green-600">+{activeMutualFund.returns3y}%</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm text-muted-foreground">Min. Investment</p>
+                      <p className="text-xl font-semibold">₹{activeMutualFund.minInvestment.toLocaleString()}</p>
+                    </div>
+                  </div>
+                  
+                  <Card className="mb-6">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base">Historical Performance</CardTitle>
+                    </CardHeader>
+                    <CardContent className="h-60">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RechartsLineChart
+                          data={[
+                            { month: 'Apr-24', value: activeMutualFund.nav },
+                            { month: 'Mar-24', value: activeMutualFund.nav * 0.98 },
+                            { month: 'Feb-24', value: activeMutualFund.nav * 0.96 },
+                            { month: 'Jan-24', value: activeMutualFund.nav * 0.94 },
+                            { month: 'Dec-23', value: activeMutualFund.nav * 0.92 },
+                            { month: 'Nov-23', value: activeMutualFund.nav * 0.9 },
+                            { month: 'Oct-23', value: activeMutualFund.nav * 0.87 },
+                            { month: 'Sep-23', value: activeMutualFund.nav * 0.85 },
+                            { month: 'Aug-23', value: activeMutualFund.nav * 0.82 },
+                          ]}
+                          margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                          <XAxis dataKey="month" />
+                          <YAxis />
+                          <RechartsTooltip />
+                          <Line
+                            type="monotone"
+                            dataKey="value"
+                            stroke="#4f46e5"
+                            strokeWidth={2}
+                            dot={{ r: 4 }}
+                            activeDot={{ r: 6 }}
+                          />
+                        </RechartsLineChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center">
+                      <Check className="h-5 w-5 text-green-600 mr-2" />
+                      <p>Consistently outperformed category average by 2.4%</p>
+                    </div>
+                    <div className="flex items-center">
+                      <Check className="h-5 w-5 text-green-600 mr-2" />
+                      <p>Low expense ratio of 0.85%</p>
+                    </div>
+                    <div className="flex items-center">
+                      <AlertTriangle className="h-5 w-5 text-amber-600 mr-2" />
+                      <p>Higher volatility than category peers</p>
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button 
+                    onClick={() => {
+                      setInvestType('mutual_fund');
+                      setName(activeMutualFund.name);
+                      setAmount("10000");
+                      setIsMutualFundDetailOpen(false);
+                      setIsAddOpen(true);
+                    }}
+                    className="bg-indigo-600 hover:bg-indigo-700"
+                  >
+                    Invest Now
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            )}
           </Dialog>
         </div>
       </main>

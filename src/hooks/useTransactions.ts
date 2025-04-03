@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
+import { CurrencyUtils } from '@/components/CurrencyToggle';
 
 export interface Transaction {
   id: string;
@@ -23,6 +24,35 @@ export const useTransactions = () => {
     end: null,
   });
   const { user } = useAuth();
+  const [currentCurrency, setCurrentCurrency] = useState<{ code: string; symbol: string }>({ code: "USD", symbol: "$" });
+
+  useEffect(() => {
+    // Load the saved currency from localStorage
+    const savedCurrency = localStorage.getItem("currency");
+    if (savedCurrency) {
+      setCurrentCurrency(JSON.parse(savedCurrency));
+    }
+
+    // Listen for currency changes
+    const handleCurrencyChange = (e: CustomEvent) => {
+      const { code, symbol, conversionRate } = e.detail;
+      setCurrentCurrency({ code, symbol });
+      
+      // Update transaction amounts in UI without refetching (for display only)
+      setTransactions(prevTx => 
+        prevTx.map(tx => ({
+          ...tx,
+          displayAmount: Number(tx.amount) * conversionRate
+        })) as Transaction[]
+      );
+    };
+
+    window.addEventListener('currency-change', handleCurrencyChange as EventListener);
+
+    return () => {
+      window.removeEventListener('currency-change', handleCurrencyChange as EventListener);
+    };
+  }, []);
 
   const fetchTransactions = async () => {
     if (!user) return;
@@ -45,7 +75,14 @@ export const useTransactions = () => {
       const { data, error } = await query;
 
       if (error) throw error;
-      setTransactions((data || []) as Transaction[]);
+      
+      // Apply currency conversion for display (actual DB values remain in original currency)
+      const processedData = (data || []).map(tx => ({
+        ...tx,
+        displayAmount: tx.amount // Start with original amount, will be converted if needed
+      }));
+      
+      setTransactions(processedData as Transaction[]);
     } catch (error: any) {
       console.error('Error fetching transactions:', error);
       toast.error('Failed to load transactions');
@@ -72,13 +109,19 @@ export const useTransactions = () => {
         description: `Added new ${newTransaction.type}: ₹${newTransaction.amount} - ${newTransaction.category}`
       });
 
-      setTransactions(prev => [data[0] as Transaction, ...prev]);
+      // Add displayAmount property for UI 
+      const newTx = {
+        ...data[0],
+        displayAmount: data[0].amount // Start with original amount
+      } as Transaction;
+
+      setTransactions(prev => [newTx, ...prev]);
       
       toast.success(`${newTransaction.type === 'income' ? 'Income' : 'Expense'} added successfully`, {
         className: "bg-green-100 text-green-800 border-green-200",
       });
       
-      return data[0] as Transaction;
+      return newTx;
     } catch (error: any) {
       console.error('Error adding transaction:', error);
       toast.error('Failed to add transaction', {
@@ -107,15 +150,21 @@ export const useTransactions = () => {
         description: `Updated ${updates.type || 'transaction'}: ₹${updates.amount || ''}`
       });
 
+      // Update local state with displayAmount
+      const updatedTx = {
+        ...data[0],
+        displayAmount: data[0].amount
+      } as Transaction;
+
       setTransactions(prev =>
-        prev.map(transaction => (transaction.id === id ? (data[0] as Transaction) : transaction))
+        prev.map(transaction => (transaction.id === id ? updatedTx : transaction))
       );
       
       toast.success('Transaction updated successfully', {
         className: "bg-green-100 text-green-800 border-green-200",
       });
       
-      return data[0] as Transaction;
+      return updatedTx;
     } catch (error: any) {
       console.error('Error updating transaction:', error);
       toast.error('Failed to update transaction', {
@@ -167,7 +216,10 @@ export const useTransactions = () => {
     return {
       income,
       expenses,
-      balance: income - expenses
+      balance: income - expenses,
+      formattedIncome: `${currentCurrency.symbol}${income.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      formattedExpenses: `${currentCurrency.symbol}${expenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      formattedBalance: `${currentCurrency.symbol}${(income - expenses).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
     };
   };
 
@@ -186,6 +238,7 @@ export const useTransactions = () => {
     getTransactionSummary,
     fetchTransactions,
     setDateRange,
-    dateRange
+    dateRange,
+    currentCurrency
   };
 };

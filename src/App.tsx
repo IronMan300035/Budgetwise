@@ -26,6 +26,7 @@ import Settings from "./pages/Settings";
 import Transactions from "./pages/Transactions";
 import Budget from "./pages/Budget";
 import Investment from "./pages/Investment";
+import ActivityLog from "./pages/ActivityLog";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,7 @@ const App = () => (
               <Route path="/transactions" element={<Transactions />} />
               <Route path="/budget" element={<Budget />} />
               <Route path="/investment" element={<Investment />} />
+              <Route path="/activity-log" element={<ActivityLog />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
