@@ -1,1 +1,7 @@
+
 project_id = "icgtfegihzcybwvmrhuv"
+
+[storage]
+[[storage.buckets]]
+name = "avatars"
+public = true

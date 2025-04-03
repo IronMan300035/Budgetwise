@@ -9,7 +9,168 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      activity_logs: {
+        Row: {
+          activity_type: string
+          created_at: string
+          description: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          description: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          description?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      budgets: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          id: string
+          period: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          id?: string
+          period: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          id?: string
+          period?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      investments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          purchase_date: string
+          quantity: number | null
+          symbol: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          purchase_date?: string
+          quantity?: number | null
+          symbol?: string | null
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          purchase_date?: string
+          quantity?: number | null
+          symbol?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          transaction_date: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          transaction_date?: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          transaction_date?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
