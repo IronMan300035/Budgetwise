@@ -2,6 +2,6 @@
 project_id = "icgtfegihzcybwvmrhuv"
 
 [storage]
-[[storage.buckets]]
-name = "avatars"
-public = true
+buckets = [
+  { name = "avatars", public = true }
+]
