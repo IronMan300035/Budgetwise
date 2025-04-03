@@ -1,0 +1,86 @@
+
+import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2, Phone } from "lucide-react";
+
+export default function VerifyPhone() {
+  const [otp, setOtp] = useState("");
+  const [countdown, setCountdown] = useState(60);
+  const [canResend, setCanResend] = useState(false);
+  const { verifyPhone, requestPhoneVerification, user } = useAuth();
+  
+  useEffect(() => {
+    // Start countdown for resending verification SMS
+    if (countdown > 0 && !canResend) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (countdown === 0 && !canResend) {
+      setCanResend(true);
+    }
+  }, [countdown, canResend]);
+  
+  const handleResendCode = async () => {
+    await requestPhoneVerification();
+    setCountdown(60);
+    setCanResend(false);
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await verifyPhone(otp);
+  };
+  
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient p-4">
+      <Card className="w-full max-w-md animate-fade-in glass-card">
+        <CardHeader className="space-y-1 text-center">
+          <div className="flex justify-center mb-4">
+            <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center">
+              <Phone className="h-6 w-6 text-primary" />
+            </div>
+          </div>
+          <CardTitle className="text-2xl">Verify your phone number</CardTitle>
+          <CardDescription>
+            We've sent a verification code to {user?.phone}. Enter the code below to verify your phone number.
+          </CardDescription>
+        </CardHeader>
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="otp" className="text-sm font-medium">Verification Code</label>
+              <Input
+                id="otp"
+                placeholder="Enter 6-digit code"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                maxLength={6}
+              />
+            </div>
+            <div className="text-center text-sm text-muted-foreground">
+              {canResend ? (
+                <Button 
+                  type="button" 
+                  variant="link" 
+                  onClick={handleResendCode}
+                  className="p-0 h-auto text-primary"
+                >
+                  Resend code
+                </Button>
+              ) : (
+                <span>Resend code in {countdown} seconds</span>
+              )}
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button type="submit" className="w-full">
+              Verify Phone Number
+            </Button>
+          </CardFooter>
+        </form>
+      </Card>
+    </div>
+  );
+}
