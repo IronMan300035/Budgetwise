@@ -18,6 +18,26 @@ export const useBudgets = () => {
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const [currency, setCurrency] = useState({ code: "USD", symbol: "$" });
+
+  useEffect(() => {
+    // Listen for currency changes
+    const handleCurrencyChange = (e: any) => {
+      setCurrency(e.detail);
+    };
+
+    window.addEventListener('currency-change', handleCurrencyChange);
+    
+    // Get initial currency from localStorage
+    const savedCurrency = localStorage.getItem("currency");
+    if (savedCurrency) {
+      setCurrency(JSON.parse(savedCurrency));
+    }
+    
+    return () => {
+      window.removeEventListener('currency-change', handleCurrencyChange);
+    };
+  }, []);
 
   const fetchBudgets = async () => {
     if (!user) return;
@@ -57,7 +77,7 @@ export const useBudgets = () => {
       await supabase.from('activity_logs').insert({
         user_id: user.id,
         activity_type: 'budget',
-        description: `Created budget for ${newBudget.category}: ₹${newBudget.amount}`
+        description: `Created budget for ${newBudget.category}: ${currency.symbol}${newBudget.amount}`
       });
 
       setBudgets(prev => [...prev, data[0] as Budget]);
@@ -92,7 +112,7 @@ export const useBudgets = () => {
       await supabase.from('activity_logs').insert({
         user_id: user.id,
         activity_type: 'budget',
-        description: `Updated budget for ${updates.category || 'category'}: ₹${updates.amount || ''}`
+        description: `Updated budget for ${updates.category || 'category'}: ${currency.symbol}${updates.amount || ''}`
       });
 
       setBudgets(prev =>
@@ -152,6 +172,7 @@ export const useBudgets = () => {
   return {
     budgets,
     loading,
+    currency,
     addBudget,
     updateBudget,
     deleteBudget,

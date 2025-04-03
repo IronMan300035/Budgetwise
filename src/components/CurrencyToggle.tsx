@@ -9,13 +9,32 @@ import {
 import { Button } from "@/components/ui/button";
 import { CircleDollarSign } from "lucide-react";
 
-// Common currencies as a starting point
+// Exchange rates with USD as base currency
+const EXCHANGE_RATES = {
+  USD: 1,
+  EUR: 0.92,
+  GBP: 0.79,
+  JPY: 151.69,
+  INR: 83.48,
+  AUD: 1.52,
+  CAD: 1.37,
+  CHF: 0.90,
+  CNY: 7.24,
+  SGD: 1.34,
+};
+
+// Common currencies
 const COMMON_CURRENCIES = [
   { code: "USD", symbol: "$", name: "US Dollar" },
   { code: "EUR", symbol: "€", name: "Euro" },
   { code: "GBP", symbol: "£", name: "British Pound" },
   { code: "JPY", symbol: "¥", name: "Japanese Yen" },
   { code: "INR", symbol: "₹", name: "Indian Rupee" },
+  { code: "AUD", symbol: "A$", name: "Australian Dollar" },
+  { code: "CAD", symbol: "C$", name: "Canadian Dollar" },
+  { code: "CHF", symbol: "Fr", name: "Swiss Franc" },
+  { code: "CNY", symbol: "¥", name: "Chinese Yuan" },
+  { code: "SGD", symbol: "S$", name: "Singapore Dollar" },
 ];
 
 export function CurrencyToggle() {
@@ -31,17 +50,36 @@ export function CurrencyToggle() {
       setCurrency(JSON.parse(savedCurrency));
     }
     
-    // In a real app, we would fetch the full list and rates from an API
-    // fetchCurrencies();
+    // In a real app, we would fetch the latest exchange rates from an API
+    // fetchExchangeRates();
   }, []);
 
   const handleCurrencyChange = (newCurrency: { code: string; symbol: string }) => {
+    const oldCurrency = currency;
     setCurrency(newCurrency);
     localStorage.setItem("currency", JSON.stringify(newCurrency));
+    
     // Trigger an event that other components can listen to
     window.dispatchEvent(
-      new CustomEvent("currency-change", { detail: newCurrency })
+      new CustomEvent("currency-change", { 
+        detail: {
+          ...newCurrency,
+          // Include conversion rate from old to new currency
+          conversionRate: EXCHANGE_RATES[newCurrency.code as keyof typeof EXCHANGE_RATES] / 
+                          EXCHANGE_RATES[oldCurrency.code as keyof typeof EXCHANGE_RATES]
+        }
+      })
     );
+  };
+
+  // Helper function to convert amount between currencies
+  const convertAmount = (amount: number, fromCurrency: string, toCurrency: string): number => {
+    const fromRate = EXCHANGE_RATES[fromCurrency as keyof typeof EXCHANGE_RATES] || 1;
+    const toRate = EXCHANGE_RATES[toCurrency as keyof typeof EXCHANGE_RATES] || 1;
+    
+    // Convert to USD first, then to target currency
+    const amountInUSD = amount / fromRate;
+    return amountInUSD * toRate;
   };
 
   if (!mounted) {
@@ -71,3 +109,22 @@ export function CurrencyToggle() {
     </DropdownMenu>
   );
 }
+
+// Export utility functions for other components to use
+export const CurrencyUtils = {
+  convertAmount: (amount: number, fromCurrency: string, toCurrency: string): number => {
+    const fromRate = EXCHANGE_RATES[fromCurrency as keyof typeof EXCHANGE_RATES] || 1;
+    const toRate = EXCHANGE_RATES[toCurrency as keyof typeof EXCHANGE_RATES] || 1;
+    
+    // Convert to USD first, then to target currency
+    const amountInUSD = amount / fromRate;
+    return amountInUSD * toRate;
+  },
+  
+  formatAmount: (amount: number, currencySymbol: string): string => {
+    return `${currencySymbol}${amount.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })}`;
+  }
+};

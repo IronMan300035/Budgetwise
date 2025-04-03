@@ -13,7 +13,8 @@ import {
   PieChart,
   Wallet,
   Landmark,
-  MessageSquare
+  MessageSquare,
+  Settings
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -32,9 +33,9 @@ export default function Navbar() {
   
   const navigation = [
     { name: "Dashboard", href: "/dashboard", requiresAuth: true },
-    { name: "Budgets", href: "/budgets", requiresAuth: true },
+    { name: "Budgets", href: "/budget", requiresAuth: true },
     { name: "Transactions", href: "/transactions", requiresAuth: true },
-    { name: "Investments", href: "/investments", requiresAuth: true },
+    { name: "Investments", href: "/investment", requiresAuth: true },
     { name: "AI Assistant", href: "/assistant", requiresAuth: true },
   ];
   
