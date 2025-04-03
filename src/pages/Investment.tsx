@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { useAuth } from "@/context/AuthContext";
 import { useInvestments } from "@/hooks/useInvestments";
 import { InvestmentCard } from "@/components/InvestmentCard";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Trash2, TrendingUp, TrendingDown, RefreshCw, LineChart, BarChart4, ChevronUp, ChevronDown, 
   DollarSign, Coins, Landmark, Wallet, ArrowRight, Calendar, Plus, Activity, AlertTriangle,
-  Briefcase, PiggyBank, Check, BarChart, Bookmark
+  Briefcase, PiggyBank, Check, BarChart, Bookmark, IndianRupee
 } from "lucide-react";
 import { format } from "date-fns";
 import {
@@ -36,9 +37,9 @@ import {
   Area,
   AreaChart,
 } from "recharts";
-import { CurrencyUtils } from "@/components/CurrencyToggle";
 import { toast } from "sonner";
 
+// Mock data for real-time market information
 const mockMarketData = {
   indices: [
     { name: "NIFTY 50", value: 22651.00, change: "+0.75%", changeValue: 168.35, isPositive: true },
@@ -182,6 +183,9 @@ export default function Investment() {
   const [activeMutualFund, setActiveMutualFund] = useState<any>(null);
   const [isMutualFundDetailOpen, setIsMutualFundDetailOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("stocks");
+  const [investmentSuccessful, setInvestmentSuccessful] = useState(false);
+  const [liveUpdatesEnabled, setLiveUpdatesEnabled] = useState(true);
+  const [marketData, setMarketData] = useState(mockMarketData);
   
   const [investType, setInvestType] = useState<"sip" | "stock" | "mutual_fund" | "crypto" | "other">("stock");
   const [name, setName] = useState("");
@@ -197,11 +201,68 @@ export default function Investment() {
     }
   }, [authLoading, user, navigate]);
   
+  // Simulate market data loading
   useEffect(() => {
     setTimeout(() => {
       setIsMarketLoading(false);
-    }, 1000);
+    }, 500); // Faster loading
   }, []);
+  
+  // Simulate live market updates
+  useEffect(() => {
+    if (!liveUpdatesEnabled) return;
+    
+    const interval = setInterval(() => {
+      if (isMarketLoading) return;
+      
+      // Clone the current market data
+      const updatedMarketData = { ...marketData };
+      
+      // Update indices with small random changes
+      updatedMarketData.indices = updatedMarketData.indices.map(index => {
+        const changePercent = (Math.random() * 0.4) - 0.2; // -0.2% to +0.2%
+        const changeValue = index.value * (changePercent / 100);
+        const newValue = index.value + changeValue;
+        return {
+          ...index,
+          value: Math.round(newValue * 100) / 100,
+          change: changeValue > 0 ? `+${changePercent.toFixed(2)}%` : `${changePercent.toFixed(2)}%`,
+          changeValue: Math.round(Math.abs(changeValue) * 100) / 100,
+          isPositive: changeValue > 0,
+        };
+      });
+      
+      // Update stocks
+      updatedMarketData.topStocks = updatedMarketData.topStocks.map(stock => {
+        const changePercent = (Math.random() * 0.6) - 0.3; // -0.3% to +0.3%
+        const changeValue = stock.price * (changePercent / 100);
+        const newPrice = stock.price + changeValue;
+        return {
+          ...stock,
+          price: Math.round(newPrice * 100) / 100,
+          change: changeValue > 0 ? `+${changePercent.toFixed(1)}%` : `${changePercent.toFixed(1)}%`,
+          isPositive: changeValue > 0,
+        };
+      });
+      
+      // Update cryptos
+      updatedMarketData.cryptos = updatedMarketData.cryptos.map(crypto => {
+        const changePercent = (Math.random() * 1.0) - 0.5; // -0.5% to +0.5%
+        const changeValue = crypto.price * (changePercent / 100);
+        const newPrice = crypto.price + changeValue;
+        return {
+          ...crypto,
+          price: Math.round(newPrice * 100) / 100,
+          change: changeValue > 0 ? `+${changePercent.toFixed(1)}%` : `${changePercent.toFixed(1)}%`,
+          isPositive: changeValue > 0,
+        };
+      });
+      
+      setMarketData(updatedMarketData);
+    }, 5000); // Update every 5 seconds
+    
+    return () => clearInterval(interval);
+  }, [liveUpdatesEnabled, isMarketLoading, marketData]);
   
   const resetForm = () => {
     setInvestType("stock");
@@ -219,18 +280,25 @@ export default function Investment() {
       return;
     }
     
-    await addInvestment({
-      type: investType,
-      name,
-      amount: parseFloat(amount),
-      quantity: quantity ? parseFloat(quantity) : undefined,
-      symbol,
-      notes,
-      purchase_date: purchaseDate,
-    });
-    
-    resetForm();
-    setIsAddOpen(false);
+    try {
+      await addInvestment({
+        type: investType,
+        name,
+        amount: parseFloat(amount),
+        quantity: quantity ? parseFloat(quantity) : undefined,
+        symbol,
+        notes,
+        purchase_date: purchaseDate,
+      });
+      
+      resetForm();
+      setIsAddOpen(false);
+      setInvestmentSuccessful(true);
+      
+      setTimeout(() => setInvestmentSuccessful(false), 3000);
+    } catch (error) {
+      toast.error("Failed to add investment");
+    }
   };
   
   const totalInvestment = investments.reduce((sum, inv) => sum + Number(inv.amount), 0);
@@ -250,13 +318,23 @@ export default function Investment() {
       case 'stock': return <Landmark className="h-4 w-4 mr-2 text-blue-600" />;
       case 'mutual_fund': return <BarChart4 className="h-4 w-4 mr-2 text-teal-600" />;
       case 'crypto': return <Coins className="h-4 w-4 mr-2 text-amber-600" />;
-      default: return <DollarSign className="h-4 w-4 mr-2 text-gray-600" />;
+      default: return <IndianRupee className="h-4 w-4 mr-2 text-gray-600" />;
     }
   };
   
   const openMutualFundDetail = (fund: any) => {
     setActiveMutualFund(fund);
     setIsMutualFundDetailOpen(true);
+  };
+  
+  const handleInvestment = (investmentType: string) => {
+    setInvestType(
+      investmentType.toLowerCase().includes('sip') ? 'sip' :
+      investmentType.toLowerCase().includes('stock') ? 'stock' :
+      investmentType.toLowerCase().includes('mutual') ? 'mutual_fund' :
+      investmentType.toLowerCase().includes('crypto') ? 'crypto' : 'other'
+    );
+    setIsAddOpen(true);
   };
   
   if (authLoading || investmentsLoading) {
@@ -272,6 +350,16 @@ export default function Investment() {
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
       <Navbar />
       
+      {/* Success notification */}
+      {investmentSuccessful && (
+        <div className="fixed top-20 right-4 z-50 bg-green-600 text-white px-6 py-3 rounded-md shadow-lg animate-fade-in-down">
+          <div className="flex items-center space-x-2">
+            <Check className="h-5 w-5" />
+            <p>Investment added successfully!</p>
+          </div>
+        </div>
+      )}
+      
       <main className="flex-1 py-8 px-4 md:px-8">
         <div className="container mx-auto">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
@@ -280,12 +368,35 @@ export default function Investment() {
               <p className="text-muted-foreground">Grow your wealth with smart investments</p>
             </div>
             
-            <Button 
-              onClick={() => setIsAddOpen(true)}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white"
-            >
-              <Plus className="h-4 w-4 mr-1" /> Add Investment
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button 
+                onClick={() => setIsAddOpen(true)}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                <Plus className="h-4 w-4 mr-1" /> Add Investment
+              </Button>
+              
+              <Button 
+                onClick={() => setLiveUpdatesEnabled(!liveUpdatesEnabled)} 
+                variant={liveUpdatesEnabled ? "default" : "outline"}
+                className={liveUpdatesEnabled ? "bg-green-600 hover:bg-green-700" : ""}
+              >
+                {liveUpdatesEnabled ? (
+                  <>
+                    <span className="relative flex h-3 w-3 mr-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                    </span>
+                    Live Updates
+                  </>
+                ) : (
+                  <>
+                    <span className="h-3 w-3 mr-2 bg-gray-300 rounded-full"></span>
+                    Enable Live
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
           
           {/* Portfolio Summary */}
@@ -308,7 +419,7 @@ export default function Investment() {
               </CardContent>
             </Card>
             
-            {mockMarketData.indices.slice(0, 3).map((index, i) => (
+            {marketData.indices.slice(0, 3).map((index, i) => (
               <Card 
                 key={index.name}
                 className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow bg-white dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50"
@@ -380,8 +491,20 @@ export default function Investment() {
                   <CardTitle>Market Trends</CardTitle>
                   <CardDescription>Historical performance of major indices</CardDescription>
                 </div>
-                <Button variant="outline" size="sm" className="flex items-center gap-1">
-                  <RefreshCw className="h-3.5 w-3.5" />
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex items-center gap-1"
+                  onClick={() => {
+                    toast.info("Refreshing market data...");
+                    setIsMarketLoading(true);
+                    setTimeout(() => {
+                      setIsMarketLoading(false);
+                      toast.success("Market data updated");
+                    }, 1000);
+                  }}
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${isMarketLoading ? 'animate-spin' : ''}`} />
                   <span>Refresh</span>
                 </Button>
               </CardHeader>
@@ -393,7 +516,7 @@ export default function Investment() {
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={mockMarketData.historicalData} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
+                    <AreaChart data={marketData.historicalData} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
                       <defs>
                         <linearGradient id="niftyGradient" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.8}/>
@@ -408,7 +531,7 @@ export default function Investment() {
                       <XAxis dataKey="date" />
                       <YAxis yAxisId="left" domain={['auto', 'auto']} />
                       <YAxis yAxisId="right" orientation="right" domain={[4500000, 5000000]} />
-                      <RechartsTooltip />
+                      <RechartsTooltip formatter={(value: number) => [`₹${value.toLocaleString()}`, '']} />
                       <Legend />
                       <Area 
                         yAxisId="left" 
@@ -461,15 +584,7 @@ export default function Investment() {
                     returns={option.returns}
                     risk={option.risk}
                     minInvestment={option.minInvestment}
-                    onClick={() => {
-                      setInvestType(
-                        option.title.toLowerCase().includes('sip') ? 'sip' :
-                        option.title.toLowerCase().includes('stocks') ? 'stock' :
-                        option.title.toLowerCase().includes('mutual') ? 'mutual_fund' :
-                        option.title.toLowerCase().includes('crypto') ? 'crypto' : 'other'
-                      );
-                      setIsAddOpen(true);
-                    }}
+                    onClick={() => handleInvestment(option.title)}
                   />
                 ))}
               </div>
@@ -572,8 +687,12 @@ export default function Investment() {
                 
                 <TabsContent value="stocks">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {mockMarketData.topStocks.map((stock, index) => (
-                      <div key={index} className="flex justify-between items-center p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer">
+                    {marketData.topStocks.map((stock, index) => (
+                      <div 
+                        key={index} 
+                        className="flex justify-between items-center p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
+                        onClick={() => handleInvestment("Stocks")}
+                      >
                         <div>
                           <div className="font-medium">{stock.name}</div>
                           <div className="text-sm text-muted-foreground">NSE</div>
@@ -592,8 +711,16 @@ export default function Investment() {
                 
                 <TabsContent value="crypto">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {mockMarketData.cryptos.map((crypto, index) => (
-                      <div key={index} className="flex justify-between items-center p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer">
+                    {marketData.cryptos.map((crypto, index) => (
+                      <div 
+                        key={index} 
+                        className="flex justify-between items-center p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
+                        onClick={() => {
+                          setName(crypto.name);
+                          setSymbol(crypto.symbol);
+                          handleInvestment("Cryptocurrency");
+                        }}
+                      >
                         <div className="flex items-center">
                           <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center mr-4">
                             <Coins className="h-5 w-5 text-primary" />
@@ -618,8 +745,8 @@ export default function Investment() {
                 <TabsContent value="mutual_funds">
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {mockMarketData.mutualFunds.map((fund, index) => (
-                        <Card key={index}>
+                      {marketData.mutualFunds.map((fund, index) => (
+                        <Card key={index} className="hover:shadow-md transition-shadow">
                           <CardHeader className="pb-2">
                             <CardTitle className="text-base">{fund.name}</CardTitle>
                             <CardDescription>{fund.category}</CardDescription>
@@ -654,7 +781,7 @@ export default function Investment() {
                     </div>
                     
                     <div className="text-center">
-                      <Button>View All Mutual Funds</Button>
+                      <Button onClick={() => handleInvestment("Mutual Funds")}>View All Mutual Funds</Button>
                     </div>
                   </div>
                 </TabsContent>
@@ -852,7 +979,7 @@ export default function Investment() {
                           <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                           <XAxis dataKey="month" />
                           <YAxis />
-                          <RechartsTooltip />
+                          <RechartsTooltip formatter={(value: number) => [`₹${value.toFixed(2)}`, 'NAV']} />
                           <Line
                             type="monotone"
                             dataKey="value"

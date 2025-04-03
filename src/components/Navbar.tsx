@@ -15,7 +15,8 @@ import {
   Landmark,
   MessageSquare,
   Settings,
-  Activity
+  Activity,
+  LogOut
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -24,11 +25,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-  const isAuthenticated = localStorage.getItem("auth_token"); // Simple check - will be replaced with Supabase
+  const { user } = useAuth();
   
   const toggleMenu = () => setIsOpen(!isOpen);
   
@@ -44,6 +46,18 @@ export default function Navbar() {
     return location.pathname === path;
   };
   
+  const isInDashboard = location.pathname.includes("/dashboard") || 
+                        location.pathname.includes("/budget") || 
+                        location.pathname.includes("/transactions") || 
+                        location.pathname.includes("/investment") || 
+                        location.pathname.includes("/assistant") || 
+                        location.pathname.includes("/profile") || 
+                        location.pathname.includes("/settings") || 
+                        location.pathname.includes("/activity-log");
+
+  // Only show auth buttons on non-dashboard pages AND when not authenticated
+  const shouldShowAuthButtons = !isInDashboard && !user;
+  
   return (
     <nav className="bg-background/80 backdrop-blur-md sticky top-0 z-50 border-b">
       <div className="container mx-auto px-4">
@@ -58,7 +72,7 @@ export default function Navbar() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
             {/* Show navigation links only if authenticated */}
-            {isAuthenticated && (
+            {user && (
               <div className="flex space-x-1">
                 {navigation.map((item) => (
                   <Link
@@ -81,7 +95,7 @@ export default function Navbar() {
               <CurrencyToggle />
               <ThemeToggle />
               
-              {!isAuthenticated ? (
+              {shouldShowAuthButtons ? (
                 <div className="flex items-center space-x-2">
                   <Button asChild variant="ghost" size="sm">
                     <Link to="/login">Log in</Link>
@@ -90,12 +104,12 @@ export default function Navbar() {
                     <Link to="/signup">Sign up</Link>
                   </Button>
                 </div>
-              ) : (
+              ) : user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="flex items-center">
                       <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-                        U
+                        {user.email?.charAt(0).toUpperCase() || "U"}
                       </div>
                     </Button>
                   </DropdownMenuTrigger>
@@ -110,11 +124,13 @@ export default function Navbar() {
                       <Link to="/settings">Settings</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="/logout">Logout</Link>
+                      <Link to="/logout" className="text-red-500 flex items-center">
+                        <LogOut className="h-4 w-4 mr-2" /> Logout
+                      </Link>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-              )}
+              ) : null}
             </div>
           </div>
 
@@ -133,7 +149,7 @@ export default function Navbar() {
       {isOpen && (
         <div className="md:hidden bg-background/95 backdrop-blur-md border-b">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            {!isAuthenticated ? (
+            {shouldShowAuthButtons ? (
               <div className="flex flex-col space-y-2 p-2">
                 <Button asChild variant="outline" size="sm">
                   <Link to="/login" onClick={toggleMenu}>Log in</Link>
@@ -142,7 +158,7 @@ export default function Navbar() {
                   <Link to="/signup" onClick={toggleMenu}>Sign up</Link>
                 </Button>
               </div>
-            ) : (
+            ) : user ? (
               <>
                 {navigation.map((item) => (
                   <Link
@@ -184,12 +200,12 @@ export default function Navbar() {
                 <Link
                   to="/logout"
                   onClick={toggleMenu}
-                  className="block px-3 py-2 rounded-md text-base font-medium text-foreground/70 hover:bg-accent/50 hover:text-foreground"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center"
                 >
-                  Logout
+                  <LogOut className="h-4 w-4 mr-2" /> Logout
                 </Link>
               </>
-            )}
+            ) : null}
           </div>
         </div>
       )}

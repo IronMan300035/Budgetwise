@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "./context/AuthContext";
+import SmartChatbot from "./components/SmartChatbot";
 
 // Pages
 import Index from "./pages/Index";
@@ -60,6 +61,8 @@ const App = () => (
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            {/* Add the chatbot component here */}
+            <SmartChatbot />
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
