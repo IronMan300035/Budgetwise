@@ -30,7 +30,8 @@ export const useBudgets = () => {
         .order('category');
 
       if (error) throw error;
-      setBudgets(data || []);
+      // Cast the data to ensure it matches the Budget interface
+      setBudgets((data || []) as Budget[]);
     } catch (error: any) {
       console.error('Error fetching budgets:', error);
       toast.error('Failed to load budgets', {
@@ -59,13 +60,13 @@ export const useBudgets = () => {
         description: `Created budget for ${newBudget.category}: ₹${newBudget.amount}`
       });
 
-      setBudgets(prev => [...prev, data[0]]);
+      setBudgets(prev => [...prev, data[0] as Budget]);
       
       toast.success('Budget added successfully', {
         className: "bg-green-100 text-green-800 border-green-200",
       });
       
-      return data[0];
+      return data[0] as Budget;
     } catch (error: any) {
       console.error('Error adding budget:', error);
       toast.error('Failed to add budget', {
@@ -95,14 +96,14 @@ export const useBudgets = () => {
       });
 
       setBudgets(prev =>
-        prev.map(budget => (budget.id === id ? data[0] : budget))
+        prev.map(budget => (budget.id === id ? (data[0] as Budget) : budget))
       );
       
       toast.success('Budget updated successfully', {
         className: "bg-green-100 text-green-800 border-green-200",
       });
       
-      return data[0];
+      return data[0] as Budget;
     } catch (error: any) {
       console.error('Error updating budget:', error);
       toast.error('Failed to update budget', {

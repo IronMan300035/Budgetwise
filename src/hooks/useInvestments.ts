@@ -34,7 +34,8 @@ export const useInvestments = () => {
         .order('purchase_date', { ascending: false });
 
       if (error) throw error;
-      setInvestments(data || []);
+      // Cast the data to ensure it matches the Investment interface
+      setInvestments((data || []) as Investment[]);
     } catch (error: any) {
       console.error('Error fetching investments:', error);
       toast.error('Failed to load investments', {
@@ -63,13 +64,13 @@ export const useInvestments = () => {
         description: `Added new ${newInvestment.type} investment: ₹${newInvestment.amount} - ${newInvestment.name}`
       });
 
-      setInvestments(prev => [data[0], ...prev]);
+      setInvestments(prev => [data[0] as Investment, ...prev]);
       
       toast.success('Investment added successfully', {
         className: "bg-green-100 text-green-800 border-green-200",
       });
       
-      return data[0];
+      return data[0] as Investment;
     } catch (error: any) {
       console.error('Error adding investment:', error);
       toast.error('Failed to add investment', {
@@ -99,14 +100,14 @@ export const useInvestments = () => {
       });
 
       setInvestments(prev =>
-        prev.map(investment => (investment.id === id ? data[0] : investment))
+        prev.map(investment => (investment.id === id ? (data[0] as Investment) : investment))
       );
       
       toast.success('Investment updated successfully', {
         className: "bg-green-100 text-green-800 border-green-200",
       });
       
-      return data[0];
+      return data[0] as Investment;
     } catch (error: any) {
       console.error('Error updating investment:', error);
       toast.error('Failed to update investment', {

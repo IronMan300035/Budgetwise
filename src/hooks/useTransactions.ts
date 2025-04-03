@@ -45,7 +45,7 @@ export const useTransactions = () => {
       const { data, error } = await query;
 
       if (error) throw error;
-      setTransactions(data || []);
+      setTransactions((data || []) as Transaction[]);
     } catch (error: any) {
       console.error('Error fetching transactions:', error);
       toast.error('Failed to load transactions');
@@ -72,13 +72,13 @@ export const useTransactions = () => {
         description: `Added new ${newTransaction.type}: ₹${newTransaction.amount} - ${newTransaction.category}`
       });
 
-      setTransactions(prev => [data[0], ...prev]);
+      setTransactions(prev => [data[0] as Transaction, ...prev]);
       
       toast.success(`${newTransaction.type === 'income' ? 'Income' : 'Expense'} added successfully`, {
         className: "bg-green-100 text-green-800 border-green-200",
       });
       
-      return data[0];
+      return data[0] as Transaction;
     } catch (error: any) {
       console.error('Error adding transaction:', error);
       toast.error('Failed to add transaction', {
@@ -108,14 +108,14 @@ export const useTransactions = () => {
       });
 
       setTransactions(prev =>
-        prev.map(transaction => (transaction.id === id ? data[0] : transaction))
+        prev.map(transaction => (transaction.id === id ? (data[0] as Transaction) : transaction))
       );
       
       toast.success('Transaction updated successfully', {
         className: "bg-green-100 text-green-800 border-green-200",
       });
       
-      return data[0];
+      return data[0] as Transaction;
     } catch (error: any) {
       console.error('Error updating transaction:', error);
       toast.error('Failed to update transaction', {

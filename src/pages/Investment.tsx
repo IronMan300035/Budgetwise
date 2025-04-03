@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -12,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, TrendingUp, TrendingDown, RefreshCw, LineChart, BarChart4, ChevronUp, ChevronDown, DollarSign, Coins, Landmark, Wallet, ArrowRight, Calendar } from "lucide-react";
+import { Trash2, TrendingUp, TrendingDown, RefreshCw, LineChart, BarChart4, ChevronUp, ChevronDown, DollarSign, Coins, Landmark, Wallet, ArrowRight, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import {
   LineChart as RechartsLineChart,
@@ -30,7 +29,6 @@ import {
   Legend,
 } from "recharts";
 
-// Mock market data - in a real app, this would come from an API
 const mockMarketData = {
   indices: [
     { name: "NIFTY 50", value: 22651.00, change: "+0.75%", changeValue: 168.35, isPositive: true },
@@ -112,7 +110,6 @@ export default function Investment() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isMarketLoading, setIsMarketLoading] = useState(true);
   
-  // Form state
   const [investType, setInvestType] = useState<"sip" | "stock" | "mutual_fund" | "crypto" | "other">("stock");
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
@@ -121,14 +118,12 @@ export default function Investment() {
   const [notes, setNotes] = useState("");
   const [purchaseDate, setPurchaseDate] = useState(format(new Date(), "yyyy-MM-dd"));
   
-  // Check authentication
   useEffect(() => {
     if (!authLoading && !user) {
       navigate("/login");
     }
   }, [authLoading, user, navigate]);
   
-  // Simulate market data loading
   useEffect(() => {
     setTimeout(() => {
       setIsMarketLoading(false);
@@ -707,23 +702,5 @@ export default function Investment() {
       
       <Footer />
     </div>
-  );
-}
-
-function Plus({ className }: { className?: string }) {
-  return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-      className={className}
-    >
-      <line x1="12" y1="5" x2="12" y2="19"></line>
-      <line x1="5" y1="12" x2="19" y2="12"></line>
-    </svg>
   );
 }
