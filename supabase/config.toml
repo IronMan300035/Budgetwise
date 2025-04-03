@@ -5,3 +5,4 @@ project_id = "icgtfegihzcybwvmrhuv"
 [[storage.buckets]]
 name = "avatars"
 public = true
+
