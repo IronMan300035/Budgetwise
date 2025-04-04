@@ -21,6 +21,7 @@ import {
   PieChart as RechartsPieChart,
   Pie,
   Cell,
+  Legend,
 } from "recharts";
 import { useAuth } from "@/context/AuthContext";
 import { useTransactions } from "@/hooks/useTransactions";
@@ -53,6 +54,10 @@ export default function Dashboard() {
     from: subDays(new Date(), 30),
     to: new Date(),
   });
+
+  const recentTransactions = useMemo(() => {
+    return transactions.slice(0, 5);
+  }, [transactions]);
 
   useEffect(() => {
     if (!authLoading && !user) {
