@@ -23,8 +23,8 @@ export default function Signup() {
       return;
     }
     
-    // Pass metadata with name as an object, not directly as string
-    await signUp(email, password, { metadata: { name } });
+    // Pass name as first name parameter according to the function definition in AuthContext
+    await signUp(email, password, name);
   };
   
   return (
