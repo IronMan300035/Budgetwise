@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +22,7 @@ import {
   PieChart as RechartsPieChart,
   Pie,
   Cell,
+  Legend
 } from "recharts";
 import { useAuth } from "@/context/AuthContext";
 import { useTransactions } from "@/hooks/useTransactions";
@@ -53,6 +55,11 @@ export default function Dashboard() {
     from: subDays(new Date(), 30),
     to: new Date(),
   });
+
+  // Define recentTransactions using the transactions array
+  const recentTransactions = useMemo(() => {
+    return transactions.slice(0, 5); // Get only the 5 most recent transactions
+  }, [transactions]);
 
   useEffect(() => {
     if (!authLoading && !user) {
