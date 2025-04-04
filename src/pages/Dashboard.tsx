@@ -15,8 +15,9 @@ import { PieChart, Pie, Cell, LineChart, Line, BarChart, Bar, XAxis, YAxis, Cart
 import { ArrowRight, ArrowUpRight, CreditCard, DollarSign, IndianRupee, LineChart as LineChartIcon, PiggyBank, Plus, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO, startOfMonth, endOfMonth, isSameMonth } from "date-fns";
+import { AddTransactionDialog } from "@/components/AddTransactionDialog";
 
-// Existing Dashboard code
+// Dashboard
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
@@ -24,6 +25,10 @@ export default function Dashboard() {
   const { budgets } = useBudgets();
   const { investments, getInvestmentTotal } = useInvestments();
   const { logs } = useActivityLogs();
+  
+  // Dialog state for adding transactions
+  const [isAddIncomeOpen, setIsAddIncomeOpen] = useState(false);
+  const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   
   useEffect(() => {
     if (!authLoading && !user) {
@@ -41,6 +46,32 @@ export default function Dashboard() {
       }));
   }, [transactions]);
   
+  // Prepare expense data for pie chart
+  const expensesByCategory = useMemo(() => {
+    const categories: Record<string, number> = {};
+    
+    transactions
+      .filter(t => t.type === 'expense')
+      .forEach(transaction => {
+        const category = transaction.category;
+        if (!categories[category]) {
+          categories[category] = 0;
+        }
+        categories[category] += Number(transaction.amount);
+      });
+    
+    return Object.keys(categories).map(category => ({
+      name: category,
+      value: categories[category]
+    }));
+  }, [transactions]);
+  
+  // Colors for the pie chart
+  const EXPENSE_COLORS = [
+    "#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", 
+    "#FF9F40", "#8AC24A", "#EA80FC", "#607D8B", "#E57373"
+  ];
+  
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -54,9 +85,25 @@ export default function Dashboard() {
       <Navbar />
       
       <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Financial Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back to your financial overview</p>
+        <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Financial Dashboard</h1>
+            <p className="text-muted-foreground">Welcome back to your financial overview</p>
+          </div>
+          <div className="mt-4 md:mt-0 flex space-x-2">
+            <Button 
+              onClick={() => setIsAddIncomeOpen(true)} 
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              <Plus className="h-4 w-4 mr-1" /> Add Income
+            </Button>
+            <Button 
+              onClick={() => setIsAddExpenseOpen(true)} 
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              <Plus className="h-4 w-4 mr-1" /> Add Expense
+            </Button>
+          </div>
         </div>
         
         {/* Financial Summary Cards */}
@@ -110,9 +157,49 @@ export default function Dashboard() {
           </Card>
         </div>
         
-        {/* Monthly Trends Chart - Fixed with new component */}
-        <div className="mb-8">
-          <MonthlyTrendsChart />
+        {/* Monthly Trends and Expenses Distribution */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-2">
+            <MonthlyTrendsChart />
+          </div>
+          
+          {/* Expense Distribution Pie Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Expense Distribution</CardTitle>
+              <CardDescription>Breakdown by category</CardDescription>
+            </CardHeader>
+            <CardContent className="h-72">
+              {expensesByCategory.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={expensesByCategory}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {expensesByCategory.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={EXPENSE_COLORS[index % EXPENSE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value: number) => [`₹${value.toLocaleString()}`, 'Amount']}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <p className="text-muted-foreground">No expense data to display</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
         
         {/* Recent Transactions */}
@@ -169,6 +256,19 @@ export default function Dashboard() {
       </main>
       
       <Footer />
+      
+      {/* Transaction Dialogs */}
+      <AddTransactionDialog 
+        open={isAddIncomeOpen} 
+        onOpenChange={setIsAddIncomeOpen} 
+        type="income" 
+      />
+      
+      <AddTransactionDialog 
+        open={isAddExpenseOpen} 
+        onOpenChange={setIsAddExpenseOpen} 
+        type="expense" 
+      />
     </div>
   );
 }

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -7,6 +6,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useInvestments } from "@/hooks/useInvestments";
 import { InvestmentCard } from "@/components/InvestmentCard";
 import { MarketTrendGraph } from "@/components/MarketTrendGraph";
+import { StockRecommendations } from "@/components/StockRecommendations";
+import { SIPRecommendations } from "@/components/SIPRecommendations";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,6 @@ import {
 import { format } from "date-fns";
 import { toast } from "sonner";
 
-// Mock data for real-time market information
 const mockMarketData = {
   indices: [
     { name: "NIFTY 50", value: 22651.00, change: "+0.75%", changeValue: 168.35, isPositive: true },
@@ -158,7 +158,6 @@ const investmentOptions = [
 
 const CHART_COLORS = ["#4f46e5", "#0891b2", "#0d9488", "#f59e0b", "#dc2626", "#8b5cf6"];
 
-// Stock investment options
 const stockOptions = [
   { name: "RELIANCE", fullName: "Reliance Industries Ltd", sector: "Energy", price: 2845.75 },
   { name: "TCS", fullName: "Tata Consultancy Services", sector: "Technology", price: 3490.80 },
@@ -168,7 +167,6 @@ const stockOptions = [
   { name: "BHARTI AIRTEL", fullName: "Bharti Airtel Ltd", sector: "Telecom", price: 1275.90 },
 ];
 
-// SIP options
 const sipOptions = [
   { name: "HDFC Balanced Advantage Fund", category: "Hybrid", nav: 325.45, minInvestment: 500 },
   { name: "Axis Bluechip Fund", category: "Large Cap", nav: 58.23, minInvestment: 500 },
@@ -201,11 +199,9 @@ export default function Investment() {
   const [notes, setNotes] = useState("");
   const [purchaseDate, setPurchaseDate] = useState(format(new Date(), "yyyy-MM-dd"));
   
-  // Stock dialog specific states
   const [selectedStock, setSelectedStock] = useState<any>(null);
   const [stockQuantity, setStockQuantity] = useState("");
   
-  // SIP dialog specific states
   const [selectedSIP, setSelectedSIP] = useState<any>(null);
   const [sipAmount, setSipAmount] = useState("");
   const [sipFrequency, setSipFrequency] = useState("monthly");
@@ -216,26 +212,22 @@ export default function Investment() {
     }
   }, [authLoading, user, navigate]);
   
-  // Simulate market data loading
   useEffect(() => {
     setTimeout(() => {
       setIsMarketLoading(false);
     }, 500);
   }, []);
   
-  // Simulate live market updates
   useEffect(() => {
     if (!liveUpdatesEnabled) return;
     
     const interval = setInterval(() => {
       if (isMarketLoading) return;
       
-      // Clone the current market data
       const updatedMarketData = { ...marketData };
       
-      // Update indices with small random changes
       updatedMarketData.indices = updatedMarketData.indices.map(index => {
-        const changePercent = (Math.random() * 0.4) - 0.2; // -0.2% to +0.2%
+        const changePercent = (Math.random() * 0.4) - 0.2;
         const changeValue = index.value * (changePercent / 100);
         const newValue = index.value + changeValue;
         return {
@@ -247,9 +239,8 @@ export default function Investment() {
         };
       });
       
-      // Update stocks
       updatedMarketData.topStocks = updatedMarketData.topStocks.map(stock => {
-        const changePercent = (Math.random() * 0.6) - 0.3; // -0.3% to +0.3%
+        const changePercent = (Math.random() * 0.6) - 0.3;
         const changeValue = stock.price * (changePercent / 100);
         const newPrice = stock.price + changeValue;
         return {
@@ -260,9 +251,8 @@ export default function Investment() {
         };
       });
       
-      // Update cryptos
       updatedMarketData.cryptos = updatedMarketData.cryptos.map(crypto => {
-        const changePercent = (Math.random() * 1.0) - 0.5; // -0.5% to +0.5%
+        const changePercent = (Math.random() * 1.0) - 0.5;
         const changeValue = crypto.price * (changePercent / 100);
         const newPrice = crypto.price + changeValue;
         return {
@@ -274,7 +264,7 @@ export default function Investment() {
       });
       
       setMarketData(updatedMarketData);
-    }, 5000); // Update every 5 seconds
+    }, 5000);
     
     return () => clearInterval(interval);
   }, [liveUpdatesEnabled, isMarketLoading, marketData]);
@@ -426,7 +416,6 @@ export default function Investment() {
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
       <Navbar />
       
-      {/* Success notification */}
       {investmentSuccessful && (
         <div className="fixed top-20 right-4 z-50 bg-green-600 text-white px-6 py-3 rounded-md shadow-lg animate-fade-in-down">
           <div className="flex items-center space-x-2">
@@ -489,7 +478,6 @@ export default function Investment() {
             </div>
           </div>
           
-          {/* Portfolio Summary */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/30 dark:to-indigo-800/30 border border-indigo-100 dark:border-indigo-800/50">
               <CardContent className="p-6">
@@ -536,7 +524,6 @@ export default function Investment() {
             ))}
           </div>
           
-          {/* Portfolio Distribution */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <Card className="col-span-1 overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
               <CardHeader>
@@ -588,7 +575,25 @@ export default function Investment() {
             </Card>
           </div>
           
-          {/* Investment Options */}
+          <div className="mb-8">
+            <Tabs defaultValue="stocks" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="stocks" className="flex items-center">
+                  <Landmark className="h-4 w-4 mr-2" /> Stock Recommendations
+                </TabsTrigger>
+                <TabsTrigger value="sip" className="flex items-center">
+                  <Calendar className="h-4 w-4 mr-2" /> SIP Recommendations
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="stocks">
+                <StockRecommendations />
+              </TabsContent>
+              <TabsContent value="sip">
+                <SIPRecommendations />
+              </TabsContent>
+            </Tabs>
+          </div>
+          
           <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow mb-8">
             <CardHeader>
               <CardTitle>Investment Options</CardTitle>
@@ -613,7 +618,6 @@ export default function Investment() {
             </CardContent>
           </Card>
           
-          {/* Investment History */}
           <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow mb-8">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
@@ -695,7 +699,6 @@ export default function Investment() {
       
       <Footer />
       
-      {/* Add Investment Dialog */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -815,7 +818,6 @@ export default function Investment() {
         </DialogContent>
       </Dialog>
       
-      {/* Stock Investment Dialog */}
       <Dialog open={isStockDialogOpen} onOpenChange={setIsStockDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -906,7 +908,6 @@ export default function Investment() {
         </DialogContent>
       </Dialog>
       
-      {/* SIP Investment Dialog */}
       <Dialog open={isSipDialogOpen} onOpenChange={setIsSipDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -1026,7 +1027,6 @@ export default function Investment() {
         </DialogContent>
       </Dialog>
       
-      {/* Mutual Fund Detail Dialog */}
       <Dialog open={isMutualFundDetailOpen} onOpenChange={setIsMutualFundDetailOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
