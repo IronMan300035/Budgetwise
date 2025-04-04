@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -6,6 +5,7 @@ import Footer from "@/components/Footer";
 import { useAuth } from "@/context/AuthContext";
 import { useInvestments } from "@/hooks/useInvestments";
 import { InvestmentCard } from "@/components/InvestmentCard";
+import { MarketTrendGraph } from "@/components/MarketTrendGraph";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,29 +14,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { 
   Trash2, TrendingUp, TrendingDown, RefreshCw, LineChart, BarChart4, ChevronUp, ChevronDown, 
   DollarSign, Coins, Landmark, Wallet, ArrowRight, Calendar, Plus, Activity, AlertTriangle,
   Briefcase, PiggyBank, Check, BarChart, Bookmark, IndianRupee
 } from "lucide-react";
 import { format } from "date-fns";
-import {
-  LineChart as RechartsLineChart,
-  Line,
-  BarChart as RechartsBarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  ResponsiveContainer,
-  Legend,
-  Area,
-  AreaChart,
-} from "recharts";
 import { toast } from "sonner";
 
 // Mock data for real-time market information
@@ -173,6 +157,25 @@ const investmentOptions = [
 
 const CHART_COLORS = ["#4f46e5", "#0891b2", "#0d9488", "#f59e0b", "#dc2626", "#8b5cf6"];
 
+// Stock investment options
+const stockOptions = [
+  { name: "RELIANCE", fullName: "Reliance Industries Ltd", sector: "Energy", price: 2845.75 },
+  { name: "TCS", fullName: "Tata Consultancy Services", sector: "Technology", price: 3490.80 },
+  { name: "HDFC BANK", fullName: "HDFC Bank Ltd", sector: "Banking", price: 1680.30 },
+  { name: "INFOSYS", fullName: "Infosys Ltd", sector: "Technology", price: 1560.25 },
+  { name: "ICICI BANK", fullName: "ICICI Bank Ltd", sector: "Banking", price: 1025.40 },
+  { name: "BHARTI AIRTEL", fullName: "Bharti Airtel Ltd", sector: "Telecom", price: 1275.90 },
+];
+
+// SIP options
+const sipOptions = [
+  { name: "HDFC Balanced Advantage Fund", category: "Hybrid", nav: 325.45, minInvestment: 500 },
+  { name: "Axis Bluechip Fund", category: "Large Cap", nav: 58.23, minInvestment: 500 },
+  { name: "Mirae Asset Emerging Bluechip", category: "Large & Mid Cap", nav: 103.45, minInvestment: 1000 },
+  { name: "SBI Small Cap Fund", category: "Small Cap", nav: 125.82, minInvestment: 5000 },
+  { name: "Parag Parikh Flexi Cap Fund", category: "Flexi Cap", nav: 68.45, minInvestment: 1000 }
+];
+
 export default function Investment() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
@@ -182,6 +185,8 @@ export default function Investment() {
   const [isMarketLoading, setIsMarketLoading] = useState(true);
   const [activeMutualFund, setActiveMutualFund] = useState<any>(null);
   const [isMutualFundDetailOpen, setIsMutualFundDetailOpen] = useState(false);
+  const [isStockDialogOpen, setIsStockDialogOpen] = useState(false);
+  const [isSipDialogOpen, setIsSipDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("stocks");
   const [investmentSuccessful, setInvestmentSuccessful] = useState(false);
   const [liveUpdatesEnabled, setLiveUpdatesEnabled] = useState(true);
@@ -195,6 +200,15 @@ export default function Investment() {
   const [notes, setNotes] = useState("");
   const [purchaseDate, setPurchaseDate] = useState(format(new Date(), "yyyy-MM-dd"));
   
+  // Stock dialog specific states
+  const [selectedStock, setSelectedStock] = useState<any>(null);
+  const [stockQuantity, setStockQuantity] = useState("");
+  
+  // SIP dialog specific states
+  const [selectedSIP, setSelectedSIP] = useState<any>(null);
+  const [sipAmount, setSipAmount] = useState("");
+  const [sipFrequency, setSipFrequency] = useState("monthly");
+  
   useEffect(() => {
     if (!authLoading && !user) {
       navigate("/login");
@@ -205,7 +219,7 @@ export default function Investment() {
   useEffect(() => {
     setTimeout(() => {
       setIsMarketLoading(false);
-    }, 500); // Faster loading
+    }, 500);
   }, []);
   
   // Simulate live market updates
@@ -301,6 +315,67 @@ export default function Investment() {
     }
   };
   
+  const handleAddStockInvestment = async () => {
+    if (!selectedStock || !stockQuantity) {
+      toast.error("Please select a stock and enter quantity");
+      return;
+    }
+    
+    const totalAmount = selectedStock.price * parseFloat(stockQuantity);
+    
+    try {
+      await addInvestment({
+        type: "stock",
+        name: selectedStock.fullName,
+        amount: totalAmount,
+        quantity: parseFloat(stockQuantity),
+        symbol: selectedStock.name,
+        notes: `Sector: ${selectedStock.sector}`,
+        purchase_date: format(new Date(), "yyyy-MM-dd"),
+      });
+      
+      setIsStockDialogOpen(false);
+      setInvestmentSuccessful(true);
+      setSelectedStock(null);
+      setStockQuantity("");
+      
+      setTimeout(() => setInvestmentSuccessful(false), 3000);
+    } catch (error) {
+      toast.error("Failed to add stock investment");
+    }
+  };
+  
+  const handleAddSIPInvestment = async () => {
+    if (!selectedSIP || !sipAmount) {
+      toast.error("Please select a fund and enter amount");
+      return;
+    }
+    
+    if (parseFloat(sipAmount) < selectedSIP.minInvestment) {
+      toast.error(`Minimum investment for this fund is ₹${selectedSIP.minInvestment}`);
+      return;
+    }
+    
+    try {
+      await addInvestment({
+        type: "sip",
+        name: selectedSIP.name,
+        amount: parseFloat(sipAmount),
+        notes: `Category: ${selectedSIP.category}, Frequency: ${sipFrequency}`,
+        purchase_date: format(new Date(), "yyyy-MM-dd"),
+      });
+      
+      setIsSipDialogOpen(false);
+      setInvestmentSuccessful(true);
+      setSelectedSIP(null);
+      setSipAmount("");
+      
+      setTimeout(() => setInvestmentSuccessful(false), 3000);
+    } catch (error) {
+      toast.error("Failed to add SIP investment");
+    }
+  };
+  
   const totalInvestment = investments.reduce((sum, inv) => sum + Number(inv.amount), 0);
   const investmentsByType = getInvestmentsByType();
   
@@ -374,6 +449,20 @@ export default function Investment() {
                 className="bg-indigo-600 hover:bg-indigo-700 text-white"
               >
                 <Plus className="h-4 w-4 mr-1" /> Add Investment
+              </Button>
+              
+              <Button 
+                onClick={() => setIsStockDialogOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Landmark className="h-4 w-4 mr-1" /> Buy Stocks
+              </Button>
+              
+              <Button 
+                onClick={() => setIsSipDialogOpen(true)}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                <Calendar className="h-4 w-4 mr-1" /> Start SIP
               </Button>
               
               <Button 
@@ -471,7 +560,7 @@ export default function Investment() {
                           <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                         ))}
                       </Pie>
-                      <RechartsTooltip formatter={(value: number) => [`₹${value.toLocaleString()}`, 'Amount']} />
+                      <Tooltip formatter={(value: number) => [`₹${value.toLocaleString()}`, 'Amount']} />
                       <Legend />
                     </PieChart>
                   </ResponsiveContainer>
@@ -491,77 +580,9 @@ export default function Investment() {
                   <CardTitle>Market Trends</CardTitle>
                   <CardDescription>Historical performance of major indices</CardDescription>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex items-center gap-1"
-                  onClick={() => {
-                    toast.info("Refreshing market data...");
-                    setIsMarketLoading(true);
-                    setTimeout(() => {
-                      setIsMarketLoading(false);
-                      toast.success("Market data updated");
-                    }, 1000);
-                  }}
-                >
-                  <RefreshCw className={`h-3.5 w-3.5 ${isMarketLoading ? 'animate-spin' : ''}`} />
-                  <span>Refresh</span>
-                </Button>
               </CardHeader>
               <CardContent className="h-80">
-                {isMarketLoading ? (
-                  <div className="h-full flex items-center justify-center">
-                    <RefreshCw className="h-8 w-8 animate-spin text-primary mr-2" />
-                    <span>Loading market data...</span>
-                  </div>
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={marketData.historicalData} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
-                      <defs>
-                        <linearGradient id="niftyGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="#4f46e5" stopOpacity={0.1}/>
-                        </linearGradient>
-                        <linearGradient id="sensexGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#0891b2" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="#0891b2" stopOpacity={0.1}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                      <XAxis dataKey="date" />
-                      <YAxis yAxisId="left" domain={['auto', 'auto']} />
-                      <YAxis yAxisId="right" orientation="right" domain={[4500000, 5000000]} />
-                      <RechartsTooltip formatter={(value: number) => [`₹${value.toLocaleString()}`, '']} />
-                      <Legend />
-                      <Area 
-                        yAxisId="left" 
-                        type="monotone" 
-                        dataKey="nifty" 
-                        name="NIFTY 50" 
-                        stroke="#4f46e5"
-                        fillOpacity={1} 
-                        fill="url(#niftyGradient)" 
-                      />
-                      <Area 
-                        yAxisId="left" 
-                        type="monotone" 
-                        dataKey="sensex" 
-                        name="SENSEX" 
-                        stroke="#0891b2"
-                        fillOpacity={1} 
-                        fill="url(#sensexGradient)" 
-                      />
-                      <Line 
-                        yAxisId="right" 
-                        type="monotone" 
-                        dataKey="bitcoin" 
-                        name="Bitcoin (₹)" 
-                        stroke="#f59e0b" 
-                        dot={{ r: 4 }}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                )}
+                <MarketTrendGraph />
               </CardContent>
             </Card>
           </div>
@@ -641,394 +662,4 @@ export default function Investment() {
                               )}
                             </td>
                             <td className="px-4 py-3">
-                              {format(new Date(investment.purchase_date), "MMM dd, yyyy")}
-                            </td>
-                            <td className="px-4 py-3 text-right font-medium">
-                              ₹{Number(investment.amount).toLocaleString()}
-                            </td>
-                            <td className="px-4 py-3 text-right">
-                              {investment.quantity ? investment.quantity : '-'}
-                            </td>
-                            <td className="px-4 py-3">
-                              <div className="flex justify-center">
-                                <Button 
-                                  size="sm" 
-                                  variant="ghost"
-                                  className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-100"
-                                  onClick={() => deleteInvestment(investment.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-          
-          {/* Market Overview */}
-          <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow mb-8">
-            <CardHeader>
-              <CardTitle>Market Overview</CardTitle>
-              <CardDescription>Latest market data & trends</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="stocks" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                <TabsList className="grid w-full max-w-md grid-cols-3">
-                  <TabsTrigger value="stocks">Stocks</TabsTrigger>
-                  <TabsTrigger value="crypto">Crypto</TabsTrigger>
-                  <TabsTrigger value="mutual_funds">Mutual Funds</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="stocks">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {marketData.topStocks.map((stock, index) => (
-                      <div 
-                        key={index} 
-                        className="flex justify-between items-center p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
-                        onClick={() => handleInvestment("Stocks")}
-                      >
-                        <div>
-                          <div className="font-medium">{stock.name}</div>
-                          <div className="text-sm text-muted-foreground">NSE</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-medium">₹{stock.price.toLocaleString()}</div>
-                          <div className={`text-sm ${stock.isPositive ? "text-green-600" : "text-red-600"} flex items-center justify-end`}>
-                            {stock.isPositive ? <ChevronUp className="h-3 w-3 mr-1" /> : <ChevronDown className="h-3 w-3 mr-1" />}
-                            {stock.change}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="crypto">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {marketData.cryptos.map((crypto, index) => (
-                      <div 
-                        key={index} 
-                        className="flex justify-between items-center p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
-                        onClick={() => {
-                          setName(crypto.name);
-                          setSymbol(crypto.symbol);
-                          handleInvestment("Cryptocurrency");
-                        }}
-                      >
-                        <div className="flex items-center">
-                          <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center mr-4">
-                            <Coins className="h-5 w-5 text-primary" />
-                          </div>
-                          <div>
-                            <div className="font-medium">{crypto.name}</div>
-                            <div className="text-sm text-muted-foreground">{crypto.symbol}</div>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-medium">₹{crypto.price.toLocaleString()}</div>
-                          <div className={`text-sm ${crypto.isPositive ? "text-green-600" : "text-red-600"} flex items-center justify-end`}>
-                            {crypto.isPositive ? <ChevronUp className="h-3 w-3 mr-1" /> : <ChevronDown className="h-3 w-3 mr-1" />}
-                            {crypto.change}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="mutual_funds">
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {marketData.mutualFunds.map((fund, index) => (
-                        <Card key={index} className="hover:shadow-md transition-shadow">
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-base">{fund.name}</CardTitle>
-                            <CardDescription>{fund.category}</CardDescription>
-                          </CardHeader>
-                          <CardContent className="pb-2">
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <div className="text-sm text-muted-foreground">NAV</div>
-                                <div className="font-medium">₹{fund.nav}</div>
-                              </div>
-                              <div>
-                                <div className="text-sm text-muted-foreground">1Y Returns</div>
-                                <div className="font-medium text-green-600">+{fund.returns1y}%</div>
-                              </div>
-                              <div>
-                                <div className="text-sm text-muted-foreground">Risk</div>
-                                <div className="font-medium">{fund.risk}</div>
-                              </div>
-                            </div>
-                          </CardContent>
-                          <CardFooter>
-                            <Button 
-                              className="w-full" 
-                              variant="outline"
-                              onClick={() => openMutualFundDetail(fund)}
-                            >
-                              View Details <ArrowRight className="h-4 w-4 ml-1" />
-                            </Button>
-                          </CardFooter>
-                        </Card>
-                      ))}
-                    </div>
-                    
-                    <div className="text-center">
-                      <Button onClick={() => handleInvestment("Mutual Funds")}>View All Mutual Funds</Button>
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-          
-          {/* Financial Education Banner */}
-          <Card className="overflow-hidden shadow-lg mb-8 bg-gradient-to-r from-indigo-600 to-blue-700 text-white">
-            <div className="p-6 sm:p-10 flex flex-col md:flex-row items-center gap-6">
-              <div className="md:w-2/3">
-                <h2 className="text-2xl font-bold mb-4">Financial Education Hub</h2>
-                <p className="mb-6 opacity-90">
-                  Access free courses, webinars, and resources to enhance your investment knowledge and make informed financial decisions.
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  <Button className="bg-white text-indigo-700 hover:bg-indigo-100">
-                    <Bookmark className="h-4 w-4 mr-1" /> Free Courses
-                  </Button>
-                  <Button variant="outline" className="border-white text-white hover:bg-white/20">
-                    <Activity className="h-4 w-4 mr-1" /> Market Insights
-                  </Button>
-                </div>
-              </div>
-              <div className="flex justify-center md:w-1/3 md:justify-end">
-                <div className="w-40 h-40 rounded-full bg-white/20 flex items-center justify-center">
-                  <BarChart className="h-20 w-20 text-white" />
-                </div>
-              </div>
-            </div>
-          </Card>
-          
-          {/* Add Investment Dialog */}
-          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Add New Investment</DialogTitle>
-                <DialogDescription>
-                  Record details of your investment.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="investment-type" className="text-right">
-                    Type
-                  </Label>
-                  <Select value={investType} onValueChange={(value) => setInvestType(value as any)}>
-                    <SelectTrigger id="investment-type" className="col-span-3">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sip">SIP</SelectItem>
-                      <SelectItem value="stock">Stock</SelectItem>
-                      <SelectItem value="mutual_fund">Mutual Fund</SelectItem>
-                      <SelectItem value="crypto">Cryptocurrency</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="investment-name" className="text-right">
-                    Name
-                  </Label>
-                  <Input
-                    id="investment-name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="col-span-3"
-                    placeholder={
-                      investType === 'sip' ? 'E.g., HDFC SIP Plan' :
-                      investType === 'stock' ? 'E.g., Reliance Industries' :
-                      investType === 'mutual_fund' ? 'E.g., Axis Bluechip Fund' :
-                      investType === 'crypto' ? 'E.g., Bitcoin' : 'Investment Name'
-                    }
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="investment-amount" className="text-right">
-                    Amount (₹)
-                  </Label>
-                  <Input
-                    id="investment-amount"
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="col-span-3"
-                  />
-                </div>
-                {(investType === 'stock' || investType === 'crypto') && (
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="investment-quantity" className="text-right">
-                      Quantity
-                    </Label>
-                    <Input
-                      id="investment-quantity"
-                      type="number"
-                      value={quantity}
-                      onChange={(e) => setQuantity(e.target.value)}
-                      className="col-span-3"
-                    />
-                  </div>
-                )}
-                {(investType === 'stock' || investType === 'crypto') && (
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="investment-symbol" className="text-right">
-                      Symbol
-                    </Label>
-                    <Input
-                      id="investment-symbol"
-                      value={symbol}
-                      onChange={(e) => setSymbol(e.target.value)}
-                      className="col-span-3"
-                      placeholder={investType === 'stock' ? 'E.g., RELIANCE' : 'E.g., BTC'}
-                    />
-                  </div>
-                )}
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="investment-date" className="text-right">
-                    Purchase Date
-                  </Label>
-                  <Input
-                    id="investment-date"
-                    type="date"
-                    value={purchaseDate}
-                    onChange={(e) => setPurchaseDate(e.target.value)}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="investment-notes" className="text-right">
-                    Notes
-                  </Label>
-                  <Input
-                    id="investment-notes"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    className="col-span-3"
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button onClick={handleAddInvestment}>Add Investment</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          
-          {/* Mutual Fund Detail Dialog */}
-          <Dialog open={isMutualFundDetailOpen} onOpenChange={setIsMutualFundDetailOpen}>
-            {activeMutualFund && (
-              <DialogContent className="sm:max-w-[700px]">
-                <DialogHeader>
-                  <DialogTitle>{activeMutualFund.name}</DialogTitle>
-                  <DialogDescription>{activeMutualFund.category} - {activeMutualFund.amc}</DialogDescription>
-                </DialogHeader>
-                <div className="py-4">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-6">
-                    <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Current NAV</p>
-                      <p className="text-xl font-semibold">₹{activeMutualFund.nav}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">1Y Returns</p>
-                      <p className="text-xl font-semibold text-green-600">+{activeMutualFund.returns1y}%</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">3Y Returns</p>
-                      <p className="text-xl font-semibold text-green-600">+{activeMutualFund.returns3y}%</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Min. Investment</p>
-                      <p className="text-xl font-semibold">₹{activeMutualFund.minInvestment.toLocaleString()}</p>
-                    </div>
-                  </div>
-                  
-                  <Card className="mb-6">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base">Historical Performance</CardTitle>
-                    </CardHeader>
-                    <CardContent className="h-60">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <RechartsLineChart
-                          data={[
-                            { month: 'Apr-24', value: activeMutualFund.nav },
-                            { month: 'Mar-24', value: activeMutualFund.nav * 0.98 },
-                            { month: 'Feb-24', value: activeMutualFund.nav * 0.96 },
-                            { month: 'Jan-24', value: activeMutualFund.nav * 0.94 },
-                            { month: 'Dec-23', value: activeMutualFund.nav * 0.92 },
-                            { month: 'Nov-23', value: activeMutualFund.nav * 0.9 },
-                            { month: 'Oct-23', value: activeMutualFund.nav * 0.87 },
-                            { month: 'Sep-23', value: activeMutualFund.nav * 0.85 },
-                            { month: 'Aug-23', value: activeMutualFund.nav * 0.82 },
-                          ]}
-                          margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                          <XAxis dataKey="month" />
-                          <YAxis />
-                          <RechartsTooltip formatter={(value: number) => [`₹${value.toFixed(2)}`, 'NAV']} />
-                          <Line
-                            type="monotone"
-                            dataKey="value"
-                            stroke="#4f46e5"
-                            strokeWidth={2}
-                            dot={{ r: 4 }}
-                            activeDot={{ r: 6 }}
-                          />
-                        </RechartsLineChart>
-                      </ResponsiveContainer>
-                    </CardContent>
-                  </Card>
-                  
-                  <div className="space-y-4">
-                    <div className="flex items-center">
-                      <Check className="h-5 w-5 text-green-600 mr-2" />
-                      <p>Consistently outperformed category average by 2.4%</p>
-                    </div>
-                    <div className="flex items-center">
-                      <Check className="h-5 w-5 text-green-600 mr-2" />
-                      <p>Low expense ratio of 0.85%</p>
-                    </div>
-                    <div className="flex items-center">
-                      <AlertTriangle className="h-5 w-5 text-amber-600 mr-2" />
-                      <p>Higher volatility than category peers</p>
-                    </div>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button 
-                    onClick={() => {
-                      setInvestType('mutual_fund');
-                      setName(activeMutualFund.name);
-                      setAmount("10000");
-                      setIsMutualFundDetailOpen(false);
-                      setIsAddOpen(true);
-                    }}
-                    className="bg-indigo-600 hover:bg-indigo-700"
-                  >
-                    Invest Now
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            )}
-          </Dialog>
-        </div>
-      </main>
-      
-      <Footer />
-    </div>
-  );
-}
+                              {format(new Date(investment.
