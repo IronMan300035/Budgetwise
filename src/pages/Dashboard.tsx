@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -22,7 +23,7 @@ export default function Dashboard() {
   const { transactions, financialSummary } = useTransactions();
   const { budgets } = useBudgets();
   const { investments, getInvestmentTotal } = useInvestments();
-  const { activityLogs } = useActivityLogs();
+  const { logs } = useActivityLogs();
   
   useEffect(() => {
     if (!authLoading && !user) {

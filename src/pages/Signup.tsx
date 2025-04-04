@@ -23,8 +23,8 @@ export default function Signup() {
       return;
     }
     
-    // Include name in user metadata when signing up
-    await signUp(email, password, { name });
+    // Pass metadata with name as an object, not directly as string
+    await signUp(email, password, { metadata: { name } });
   };
   
   return (

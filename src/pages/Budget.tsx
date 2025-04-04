@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -10,7 +11,12 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { CryptoCurrencyChart } from "@/components/CryptoCurrencyChart";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
-import { Plus, AlertTriangle, Check, ArrowRight, PiggyBank, Wallet, CreditCard, ShoppingCart, Pencil, Trash2 } from "lucide-react";
+import { Plus, AlertTriangle, Check, ArrowRight, PiggyBank, Wallet, CreditCard, ShoppingCart, Pencil, Trash2, AlertCircle } from "lucide-react";
+import { format } from "date-fns";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 export default function Budget() {
   const navigate = useNavigate();
@@ -177,7 +183,7 @@ export default function Budget() {
                           className="h-8 w-8 p-0"
                           onClick={() => openEditDialog(budget)}
                         >
-                          <Edit className="h-4 w-4" />
+                          <Pencil className="h-4 w-4" />
                         </Button>
                         <Button 
                           size="sm" 
