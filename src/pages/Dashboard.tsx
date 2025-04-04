@@ -12,16 +12,28 @@ import { MonthlyTrendsChart } from "@/components/MonthlyTrendsChart";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PieChart, Pie, Cell, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { ArrowRight, ArrowUpRight, CreditCard, DollarSign, IndianRupee, LineChart as LineChartIcon, PiggyBank, Plus, TrendingDown, TrendingUp, Wallet } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CreditCard, DollarSign, IndianRupee, LineChart as LineChartIcon, PiggyBank, Plus, RefreshCw, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO, startOfMonth, endOfMonth, isSameMonth } from "date-fns";
 import { AddTransactionDialog } from "@/components/AddTransactionDialog";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 // Dashboard
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { transactions, financialSummary } = useTransactions();
+  const { transactions, financialSummary, fetchTransactions } = useTransactions();
   const { budgets } = useBudgets();
   const { investments, getInvestmentTotal } = useInvestments();
   const { logs } = useActivityLogs();
@@ -29,6 +41,7 @@ export default function Dashboard() {
   // Dialog state for adding transactions
   const [isAddIncomeOpen, setIsAddIncomeOpen] = useState(false);
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   
   useEffect(() => {
     if (!authLoading && !user) {
@@ -71,6 +84,24 @@ export default function Dashboard() {
     "#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", 
     "#FF9F40", "#8AC24A", "#EA80FC", "#607D8B", "#E57373"
   ];
+
+  // Reset dashboard data function
+  const resetDashboard = async () => {
+    setIsResetting(true);
+    try {
+      // Refetch transactions to reset data
+      await fetchTransactions();
+      toast.success("Dashboard has been reset successfully", {
+        className: "bg-green-100 text-green-800 border-green-200",
+      });
+    } catch (error) {
+      toast.error("Failed to reset dashboard", {
+        className: "bg-red-100 text-red-800 border-red-200",
+      });
+    } finally {
+      setIsResetting(false);
+    }
+  };
   
   if (authLoading) {
     return (
@@ -90,7 +121,7 @@ export default function Dashboard() {
             <h1 className="text-3xl font-bold">Financial Dashboard</h1>
             <p className="text-muted-foreground">Welcome back to your financial overview</p>
           </div>
-          <div className="mt-4 md:mt-0 flex space-x-2">
+          <div className="mt-4 md:mt-0 flex flex-wrap gap-2">
             <Button 
               onClick={() => setIsAddIncomeOpen(true)} 
               className="bg-green-600 hover:bg-green-700 text-white"
@@ -103,6 +134,31 @@ export default function Dashboard() {
             >
               <Plus className="h-4 w-4 mr-1" /> Add Expense
             </Button>
+            
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                  disabled={isResetting}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-1 ${isResetting ? 'animate-spin' : ''}`} /> 
+                  Reset
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Reset Dashboard</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will reset the dashboard to its default state. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={resetDashboard}>Reset</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
         
