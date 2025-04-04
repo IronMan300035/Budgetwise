@@ -13,7 +13,6 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import VerifyEmail from "./pages/VerifyEmail";
-import VerifyPhone from "./pages/VerifyPhone";
 import Dashboard from "./pages/Dashboard";
 import Assistant from "./pages/Assistant";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -44,7 +43,6 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
-              <Route path="/verify-phone" element={<VerifyPhone />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/assistant" element={<Assistant />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />

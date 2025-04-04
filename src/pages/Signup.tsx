@@ -12,7 +12,6 @@ export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [phone, setPhone] = useState("");
   const { signUp, loading } = useAuth();
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -23,7 +22,8 @@ export default function Signup() {
       return;
     }
     
-    await signUp(email, password, phone);
+    // Remove phone parameter from signUp
+    await signUp(email, password);
   };
   
   return (
@@ -49,16 +49,6 @@ export default function Signup() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="phone" className="text-sm font-medium">Phone Number (for verification)</label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="+1 (555) 123-4567"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
               />
             </div>
             <div className="space-y-2">

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
@@ -25,6 +25,28 @@ export const useTransactions = () => {
   });
   const { user } = useAuth();
   const [currentCurrency, setCurrentCurrency] = useState<{ code: string; symbol: string }>({ code: "USD", symbol: "$" });
+
+  // Use memoized calculations for financial totals to improve performance
+  const financialSummary = useMemo(() => {
+    const income = transactions
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+    
+    const expenses = transactions
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+    
+    const balance = income - expenses;
+    
+    return {
+      income,
+      expenses,
+      balance,
+      formattedIncome: `${currentCurrency.symbol}${income.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      formattedExpenses: `${currentCurrency.symbol}${expenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      formattedBalance: `${currentCurrency.symbol}${balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    };
+  }, [transactions, currentCurrency]);
 
   useEffect(() => {
     // Load the saved currency from localStorage
@@ -205,22 +227,7 @@ export const useTransactions = () => {
   };
 
   const getTransactionSummary = () => {
-    const income = transactions
-      .filter(t => t.type === 'income')
-      .reduce((sum, t) => sum + Number(t.amount), 0);
-    
-    const expenses = transactions
-      .filter(t => t.type === 'expense')
-      .reduce((sum, t) => sum + Number(t.amount), 0);
-    
-    return {
-      income,
-      expenses,
-      balance: income - expenses,
-      formattedIncome: `${currentCurrency.symbol}${income.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      formattedExpenses: `${currentCurrency.symbol}${expenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      formattedBalance: `${currentCurrency.symbol}${(income - expenses).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-    };
+    return financialSummary;
   };
 
   useEffect(() => {
@@ -239,6 +246,8 @@ export const useTransactions = () => {
     fetchTransactions,
     setDateRange,
     dateRange,
-    currentCurrency
+    currentCurrency,
+    // Export the memoized summary directly for faster access
+    financialSummary
   };
 };

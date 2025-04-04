@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
-import { CurrencyToggle } from "./CurrencyToggle";
 import { Button } from "@/components/ui/button";
 import { 
   CircleDollarSign,
@@ -58,6 +57,9 @@ export default function Navbar() {
   // Only show auth buttons on non-dashboard pages AND when not authenticated
   const shouldShowAuthButtons = !isInDashboard && !user;
   
+  // Only show currency toggle on non-dashboard pages
+  const showCurrencyToggle = !isInDashboard;
+  
   return (
     <nav className="bg-background/80 backdrop-blur-md sticky top-0 z-50 border-b">
       <div className="container mx-auto px-4">
@@ -92,8 +94,8 @@ export default function Navbar() {
             )}
 
             <div className="flex items-center space-x-2 border-l ml-2 pl-2">
-              <CurrencyToggle />
-              <ThemeToggle />
+              {showCurrencyToggle && <ThemeToggle />}
+              {!showCurrencyToggle && <ThemeToggle />}
               
               {shouldShowAuthButtons ? (
                 <div className="flex items-center space-x-2">
@@ -136,8 +138,8 @@ export default function Navbar() {
 
           {/* Mobile Navigation Toggle */}
           <div className="md:hidden flex items-center space-x-2">
-            <CurrencyToggle />
-            <ThemeToggle />
+            {showCurrencyToggle && <ThemeToggle />}
+            {!showCurrencyToggle && <ThemeToggle />}
             <Button variant="ghost" size="icon" onClick={toggleMenu}>
               {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>

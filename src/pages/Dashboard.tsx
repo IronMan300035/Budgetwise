@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,10 +38,16 @@ const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { transactions, loading: txLoading, getTransactionSummary, addTransaction, dateRange, setDateRange, fetchTransactions } = useTransactions();
-  const [totalIncome, setTotalIncome] = useState(0);
-  const [totalExpenses, setTotalExpenses] = useState(0);
-  const [balance, setBalance] = useState(0);
+  const { 
+    transactions, 
+    loading: txLoading, 
+    addTransaction, 
+    dateRange, 
+    setDateRange, 
+    fetchTransactions,
+    financialSummary // Use the memoized summary directly
+  } = useTransactions();
+  
   const [addIncomeOpen, setAddIncomeOpen] = useState(false);
   const [addExpenseOpen, setAddExpenseOpen] = useState(false);
   const [datePickerRange, setDatePickerRange] = useState<DateRange | undefined>({
@@ -56,16 +61,6 @@ export default function Dashboard() {
       navigate("/login");
     }
   }, [authLoading, user, navigate]);
-
-  // Update summary stats when transactions change
-  useEffect(() => {
-    if (!txLoading) {
-      const summary = getTransactionSummary();
-      setTotalIncome(summary.income);
-      setTotalExpenses(summary.expenses);
-      setBalance(summary.balance);
-    }
-  }, [transactions, txLoading, getTransactionSummary]);
 
   // Update date range filter
   useEffect(() => {
@@ -172,6 +167,9 @@ export default function Dashboard() {
     );
   }
 
+  // Destructure values from the memoized summary for better performance
+  const { income: totalIncome, expenses: totalExpenses, balance } = financialSummary;
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
       <Navbar />
@@ -218,7 +216,7 @@ export default function Dashboard() {
             </div>
           </div>
           
-          {/* Summary Cards */}
+          {/* Summary Cards - Use the memoized values directly */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <Card className="overflow-hidden shadow-lg border-t-4 border-t-green-500 hover:shadow-xl transition-shadow">
               <CardContent className="p-6">
