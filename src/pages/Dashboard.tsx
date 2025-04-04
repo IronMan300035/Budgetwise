@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,6 @@ import {
   PieChart as RechartsPieChart,
   Pie,
   Cell,
-  Legend
 } from "recharts";
 import { useAuth } from "@/context/AuthContext";
 import { useTransactions } from "@/hooks/useTransactions";
@@ -34,6 +32,7 @@ import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 
+// Color palette for charts
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
 
 export default function Dashboard() {
@@ -46,7 +45,7 @@ export default function Dashboard() {
     dateRange, 
     setDateRange, 
     fetchTransactions,
-    financialSummary 
+    financialSummary // Use the memoized summary directly
   } = useTransactions();
   
   const [addIncomeOpen, setAddIncomeOpen] = useState(false);
@@ -56,17 +55,14 @@ export default function Dashboard() {
     to: new Date(),
   });
 
-  // Define recentTransactions using the transactions array
-  const recentTransactions = useMemo(() => {
-    return transactions.slice(0, 5); // Get only the 5 most recent transactions
-  }, [transactions]);
-
+  // Check authentication
   useEffect(() => {
     if (!authLoading && !user) {
       navigate("/login");
     }
   }, [authLoading, user, navigate]);
 
+  // Update date range filter
   useEffect(() => {
     if (datePickerRange?.from && datePickerRange?.to) {
       setDateRange({
@@ -76,21 +72,25 @@ export default function Dashboard() {
     }
   }, [datePickerRange, setDateRange]);
 
+  // Function to reset data
   const handleResetData = async () => {
     if (!user) return;
     
     try {
+      // Delete all transactions
       await supabase
         .from('transactions')
         .delete()
         .eq('user_id', user.id);
       
+      // Log activity
       await supabase.from('activity_logs').insert({
         user_id: user.id,
         activity_type: 'reset',
         description: `Reset financial data`
       });
       
+      // Refresh data
       fetchTransactions();
       
       toast.success("All data has been reset successfully", {
@@ -104,6 +104,7 @@ export default function Dashboard() {
     }
   };
 
+  // Group transactions by category for pie charts
   const expensesByCategory = transactions
     .filter(tx => tx.type === 'expense')
     .reduce((acc, tx) => {
@@ -132,33 +133,30 @@ export default function Dashboard() {
     value: incomeByCategory[category]
   }));
 
-  const trendsData = useMemo(() => {
-    const last30Days = Array.from({ length: 30 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (29 - i));
-      return format(date, 'yyyy-MM-dd');
-    });
-    
-    const dateMap = last30Days.reduce((acc, date) => {
+  // Group transactions by date for trend chart
+  const transactionsByDate = transactions.reduce((acc, tx) => {
+    const date = tx.transaction_date.split('T')[0];
+    if (!acc[date]) {
       acc[date] = { date, income: 0, expenses: 0 };
-      return acc;
-    }, {} as Record<string, { date: string; income: number; expenses: number }>);
+    }
     
-    transactions.forEach(tx => {
-      const date = tx.transaction_date.split('T')[0];
-      if (dateMap[date]) {
-        if (tx.type === 'income') {
-          dateMap[date].income += Number(tx.amount);
-        } else {
-          dateMap[date].expenses += Number(tx.amount);
-        }
-      }
-    });
+    if (tx.type === 'income') {
+      acc[date].income += Number(tx.amount);
+    } else {
+      acc[date].expenses += Number(tx.amount);
+    }
     
-    return Object.values(dateMap).sort((a, b) => a.date.localeCompare(b.date));
-  }, [transactions]);
+    return acc;
+  }, {} as Record<string, { date: string; income: number; expenses: number }>);
 
-  const { income: totalIncome, expenses: totalExpenses, balance } = financialSummary;
+  const trendsData = Object.values(transactionsByDate)
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(-30); // Last 30 days with data
+
+  // Recent transactions for display
+  const recentTransactions = [...transactions]
+    .sort((a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime())
+    .slice(0, 5);
 
   if (authLoading || txLoading) {
     return (
@@ -168,6 +166,9 @@ export default function Dashboard() {
       </div>
     );
   }
+
+  // Destructure values from the memoized summary for better performance
+  const { income: totalIncome, expenses: totalExpenses, balance } = financialSummary;
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
@@ -215,6 +216,7 @@ export default function Dashboard() {
             </div>
           </div>
           
+          {/* Summary Cards - Use the memoized values directly */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <Card className="overflow-hidden shadow-lg border-t-4 border-t-green-500 hover:shadow-xl transition-shadow">
               <CardContent className="p-6">
@@ -284,67 +286,36 @@ export default function Dashboard() {
             </Card>
           </div>
           
+          {/* Main Dashboard Content */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            {/* Trends Chart */}
             <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow lg:col-span-2">
               <CardHeader>
                 <CardTitle>Monthly Trends</CardTitle>
                 <CardDescription>Your income and expenses over time</CardDescription>
               </CardHeader>
-              <CardContent className="h-80">
+              <CardContent>
                 {trendsData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={trendsData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                      <defs>
-                        <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#4ade80" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="#4ade80" stopOpacity={0.1}/>
-                        </linearGradient>
-                        <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#f87171" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="#f87171" stopOpacity={0.1}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                      <XAxis 
-                        dataKey="date" 
-                        tickFormatter={(date) => {
-                          return format(new Date(date), "dd/MM");
-                        }}
-                        tick={{ fontSize: 12 }}
-                        tickMargin={10}
-                      />
-                      <YAxis 
-                        tickFormatter={(value) => `₹${value}`}
-                        tick={{ fontSize: 12 }}
-                      />
-                      <RechartsTooltip 
-                        formatter={(value: number) => [`₹${value.toLocaleString()}`, '']}
-                        labelFormatter={(date) => format(new Date(date), "MMM dd, yyyy")}
-                        contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                      />
-                      <Legend wrapperStyle={{ paddingTop: 10 }} />
-                      <Area 
-                        type="monotone" 
-                        dataKey="income" 
-                        name="Income" 
-                        stroke="#4ade80" 
-                        strokeWidth={2}
-                        fillOpacity={1} 
-                        fill="url(#incomeGradient)" 
-                        activeDot={{ r: 6 }}
-                      />
-                      <Area 
-                        type="monotone" 
-                        dataKey="expenses" 
-                        name="Expenses" 
-                        stroke="#f87171" 
-                        strokeWidth={2}
-                        fillOpacity={1} 
-                        fill="url(#expenseGradient)" 
-                        activeDot={{ r: 6 }}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={trendsData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                        <XAxis 
+                          dataKey="date" 
+                          tickFormatter={(date) => {
+                            return format(new Date(date), "dd/MM");
+                          }}
+                        />
+                        <YAxis />
+                        <RechartsTooltip 
+                          formatter={(value: number) => [`₹${value.toLocaleString()}`, '']}
+                          labelFormatter={(date) => format(new Date(date), "MMM dd, yyyy")}
+                        />
+                        <Area type="monotone" dataKey="income" stackId="1" stroke="#4ade80" fill="#4ade80" fillOpacity={0.6} />
+                        <Area type="monotone" dataKey="expenses" stackId="2" stroke="#f87171" fill="#f87171" fillOpacity={0.5} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
                 ) : (
                   <div className="h-80 flex items-center justify-center flex-col">
                     <Calendar className="h-16 w-16 text-muted-foreground mb-4" />
@@ -354,7 +325,8 @@ export default function Dashboard() {
                 )}
               </CardContent>
             </Card>
-            
+
+            {/* Expenses Breakdown */}
             <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
               <CardHeader>
                 <CardTitle>Expenses Breakdown</CardTitle>
@@ -396,6 +368,7 @@ export default function Dashboard() {
             </Card>
           </div>
           
+          {/* Recent Transactions */}
           <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow mb-8">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
@@ -436,6 +409,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
           
+          {/* Add transaction dialogs */}
           <AddTransactionDialog 
             open={addIncomeOpen} 
             onOpenChange={setAddIncomeOpen}

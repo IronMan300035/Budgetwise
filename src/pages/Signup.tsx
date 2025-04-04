@@ -9,7 +9,6 @@ import { CircleDollarSign, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Signup() {
-  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -23,13 +22,8 @@ export default function Signup() {
       return;
     }
     
-    if (!fullName.trim()) {
-      toast.error("Please enter your name");
-      return;
-    }
-    
-    // Pass fullName to signUp
-    await signUp(email, password, fullName);
+    // Remove phone parameter from signUp
+    await signUp(email, password);
   };
   
   return (
@@ -46,17 +40,6 @@ export default function Signup() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="fullName" className="text-sm font-medium">Full Name</label>
-              <Input
-                id="fullName"
-                type="text"
-                placeholder="John Doe"
-                required
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-              />
-            </div>
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium">Email</label>
               <Input
