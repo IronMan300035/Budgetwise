@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -662,4 +663,427 @@ export default function Investment() {
                               )}
                             </td>
                             <td className="px-4 py-3">
-                              {format(new Date(investment.
+                              {format(new Date(investment.purchase_date), "MMM d, yyyy")}
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <div className="font-medium">₹{Number(investment.amount).toLocaleString()}</div>
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              {investment.quantity || "-"}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => deleteInvestment(investment.id)}
+                                className="text-red-500 hover:text-red-700 hover:bg-red-100"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+      
+      <Footer />
+      
+      {/* Add Investment Dialog */}
+      <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New Investment</DialogTitle>
+            <DialogDescription>
+              Enter the details of your investment to track it in your portfolio.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="investment-type" className="text-right">
+                Type
+              </Label>
+              <Select 
+                value={investType} 
+                onValueChange={(value) => setInvestType(value as any)}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select investment type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="stock">Stock</SelectItem>
+                  <SelectItem value="sip">SIP</SelectItem>
+                  <SelectItem value="mutual_fund">Mutual Fund</SelectItem>
+                  <SelectItem value="crypto">Crypto</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="name"
+                placeholder="Investment name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="amount" className="text-right">
+                Amount (₹)
+              </Label>
+              <Input
+                id="amount"
+                type="number"
+                placeholder="Amount invested"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            {(investType === "stock" || investType === "crypto") && (
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="quantity" className="text-right">
+                  Quantity
+                </Label>
+                <Input
+                  id="quantity"
+                  type="number"
+                  placeholder="Number of shares/coins"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
+            )}
+            {(investType === "stock" || investType === "crypto") && (
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="symbol" className="text-right">
+                  Symbol
+                </Label>
+                <Input
+                  id="symbol"
+                  placeholder="Ticker symbol"
+                  value={symbol}
+                  onChange={(e) => setSymbol(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
+            )}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="purchase-date" className="text-right">
+                Purchase Date
+              </Label>
+              <Input
+                id="purchase-date"
+                type="date"
+                value={purchaseDate}
+                onChange={(e) => setPurchaseDate(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="notes" className="text-right">
+                Notes
+              </Label>
+              <Input
+                id="notes"
+                placeholder="Additional notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleAddInvestment}>
+              Add Investment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Stock Investment Dialog */}
+      <Dialog open={isStockDialogOpen} onOpenChange={setIsStockDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Buy Stocks</DialogTitle>
+            <DialogDescription>
+              Select a stock and enter the quantity to invest.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="stock-select" className="text-right">
+                Stock
+              </Label>
+              <Select 
+                value={selectedStock ? selectedStock.name : ""}
+                onValueChange={(value) => {
+                  const stock = stockOptions.find(s => s.name === value);
+                  setSelectedStock(stock);
+                }}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select a stock" />
+                </SelectTrigger>
+                <SelectContent>
+                  {stockOptions.map((stock) => (
+                    <SelectItem key={stock.name} value={stock.name}>
+                      {stock.name} - ₹{stock.price.toLocaleString()}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {selectedStock && (
+              <div className="bg-muted p-4 rounded-md mb-2">
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Name:</span>
+                    <p className="font-medium">{selectedStock.fullName}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Sector:</span>
+                    <p className="font-medium">{selectedStock.sector}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Current Price:</span>
+                    <p className="font-medium">₹{selectedStock.price.toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="stock-quantity" className="text-right">
+                Quantity
+              </Label>
+              <Input
+                id="stock-quantity"
+                type="number"
+                placeholder="Number of shares"
+                value={stockQuantity}
+                onChange={(e) => setStockQuantity(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            
+            {selectedStock && stockQuantity && (
+              <div className="bg-muted p-4 rounded-md">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Total Investment:</span>
+                  <span className="font-bold">₹{(selectedStock.price * parseFloat(stockQuantity || "0")).toLocaleString()}</span>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsStockDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              type="button" 
+              onClick={handleAddStockInvestment}
+              disabled={!selectedStock || !stockQuantity}
+            >
+              Buy Now
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* SIP Investment Dialog */}
+      <Dialog open={isSipDialogOpen} onOpenChange={setIsSipDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Start SIP</DialogTitle>
+            <DialogDescription>
+              Select a mutual fund and set up your Systematic Investment Plan.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="sip-select" className="text-right">
+                Fund
+              </Label>
+              <Select 
+                value={selectedSIP ? selectedSIP.name : ""}
+                onValueChange={(value) => {
+                  const sip = sipOptions.find(s => s.name === value);
+                  setSelectedSIP(sip);
+                }}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select a mutual fund" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sipOptions.map((sip) => (
+                    <SelectItem key={sip.name} value={sip.name}>
+                      {sip.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {selectedSIP && (
+              <div className="bg-muted p-4 rounded-md mb-2">
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Category:</span>
+                    <p className="font-medium">{selectedSIP.category}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">NAV:</span>
+                    <p className="font-medium">₹{selectedSIP.nav.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Min Investment:</span>
+                    <p className="font-medium">₹{selectedSIP.minInvestment.toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="sip-amount" className="text-right">
+                Amount (₹)
+              </Label>
+              <Input
+                id="sip-amount"
+                type="number"
+                placeholder="Monthly investment amount"
+                value={sipAmount}
+                onChange={(e) => setSipAmount(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="sip-frequency" className="text-right">
+                Frequency
+              </Label>
+              <Select 
+                value={sipFrequency}
+                onValueChange={(value) => setSipFrequency(value)}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select frequency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="quarterly">Quarterly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {selectedSIP && sipAmount && (
+              <div className="bg-muted p-4 rounded-md">
+                <div className="text-sm space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Units per installment:</span>
+                    <span className="font-medium">{(parseFloat(sipAmount || "0") / selectedSIP.nav).toFixed(3)}</span>
+                  </div>
+                  {sipFrequency === "monthly" && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Yearly investment:</span>
+                      <span className="font-medium">₹{(parseFloat(sipAmount || "0") * 12).toLocaleString()}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsSipDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              type="button" 
+              onClick={handleAddSIPInvestment}
+              disabled={!selectedSIP || !sipAmount}
+            >
+              Start SIP
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Mutual Fund Detail Dialog */}
+      <Dialog open={isMutualFundDetailOpen} onOpenChange={setIsMutualFundDetailOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{activeMutualFund?.name}</DialogTitle>
+            <DialogDescription>
+              Mutual Fund Details
+            </DialogDescription>
+          </DialogHeader>
+          {activeMutualFund && (
+            <div className="py-4">
+              <div className="grid grid-cols-2 gap-y-4">
+                <div>
+                  <span className="text-sm text-muted-foreground">Category</span>
+                  <p className="font-medium">{activeMutualFund.category}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-muted-foreground">NAV</span>
+                  <p className="font-medium">₹{activeMutualFund.nav}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-muted-foreground">1Y Returns</span>
+                  <p className="font-medium text-green-600">{activeMutualFund.returns1y}%</p>
+                </div>
+                <div>
+                  <span className="text-sm text-muted-foreground">3Y Returns</span>
+                  <p className="font-medium text-green-600">{activeMutualFund.returns3y}%</p>
+                </div>
+                <div>
+                  <span className="text-sm text-muted-foreground">Risk Level</span>
+                  <p className="font-medium">{activeMutualFund.risk}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-muted-foreground">Min Investment</span>
+                  <p className="font-medium">₹{activeMutualFund.minInvestment}</p>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-sm text-muted-foreground">AMC</span>
+                  <p className="font-medium">{activeMutualFund.amc}</p>
+                </div>
+              </div>
+              
+              <div className="mt-6 pt-6 border-t">
+                <h4 className="font-medium mb-2">Historical Performance</h4>
+                <div className="h-40 bg-muted rounded-md flex items-center justify-center">
+                  <p className="text-sm text-muted-foreground">Performance chart will be available soon</p>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsMutualFundDetailOpen(false)}>
+              Close
+            </Button>
+            <Button>Invest Now</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
