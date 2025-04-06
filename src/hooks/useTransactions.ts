@@ -25,8 +25,9 @@ export const useTransactions = () => {
     end: null,
   });
   const { user } = useAuth();
-  const [currentCurrency, setCurrentCurrency] = useState<{ code: string; symbol: string }>({ code: "USD", symbol: "$" });
-  const [refreshTrigger, setRefreshTrigger] = useState(0); // Add a refresh trigger
+  const [currentCurrency, setCurrentCurrency] = useState<{ code: string; symbol: string }>({ code: "INR", symbol: "₹" });
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   // Force a refresh of transactions
   const refreshTransactions = () => {
@@ -59,7 +60,12 @@ export const useTransactions = () => {
     // Load the saved currency from localStorage
     const savedCurrency = localStorage.getItem("currency");
     if (savedCurrency) {
-      setCurrentCurrency(JSON.parse(savedCurrency));
+      try {
+        setCurrentCurrency(JSON.parse(savedCurrency));
+      } catch (e) {
+        console.error("Error parsing saved currency:", e);
+        localStorage.removeItem("currency");
+      }
     }
 
     // Listen for currency changes
@@ -84,14 +90,19 @@ export const useTransactions = () => {
   }, []);
 
   const fetchTransactions = async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
+    setError(null);
+    
     try {
       let query = supabase
         .from('transactions')
         .select('*')
-        .eq('user_id', user.id)  // Make sure we only get this user's transactions
+        .eq('user_id', user.id)
         .order('transaction_date', { ascending: false });
 
       if (dateRange.start) {
@@ -104,18 +115,27 @@ export const useTransactions = () => {
 
       const { data, error } = await query;
 
-      if (error) throw error;
-      
-      // Apply currency conversion for display (actual DB values remain in original currency)
-      const processedData = (data || []).map(tx => ({
-        ...tx,
-        displayAmount: tx.amount // Start with original amount, will be converted if needed
-      }));
-      
-      setTransactions(processedData as Transaction[]);
+      if (error) {
+        console.error('Error fetching transactions:', error);
+        setError(error.message);
+        toast.error('Failed to load transactions. Please try again later.');
+        // Set empty array to prevent undefined errors
+        setTransactions([]);
+      } else {
+        // Apply currency conversion for display (actual DB values remain in original currency)
+        const processedData = (data || []).map(tx => ({
+          ...tx,
+          displayAmount: tx.amount // Start with original amount, will be converted if needed
+        }));
+        
+        setTransactions(processedData as Transaction[]);
+      }
     } catch (error: any) {
-      console.error('Error fetching transactions:', error);
+      console.error('Error in fetchTransactions:', error);
+      setError(error.message || 'An unexpected error occurred');
       toast.error('Failed to load transactions');
+      // Set empty array to prevent undefined errors
+      setTransactions([]);
     } finally {
       setLoading(false);
     }
@@ -244,46 +264,57 @@ export const useTransactions = () => {
   useEffect(() => {
     if (!user) return;
     
-    const transactionChannel = supabase
-      .channel('public:transactions')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'transactions',
-        filter: `user_id=eq.${user.id}`,
-      }, (payload) => {
-        console.log('Transaction change received:', payload);
-        
-        // Handle different types of changes
-        if (payload.eventType === 'INSERT') {
-          const newTransaction = {
-            ...payload.new,
-            displayAmount: payload.new.amount
-          } as Transaction;
+    // Set a timeout to prevent immediate subscription that might cause errors
+    const timeoutId = setTimeout(() => {
+      const transactionChannel = supabase
+        .channel('public:transactions')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'transactions',
+          filter: `user_id=eq.${user.id}`,
+        }, (payload) => {
+          console.log('Transaction change received:', payload);
           
-          setTransactions(prev => [newTransaction, ...prev.filter(t => t.id !== newTransaction.id)]);
-        } 
-        else if (payload.eventType === 'UPDATE') {
-          const updatedTransaction = {
-            ...payload.new,
-            displayAmount: payload.new.amount
-          } as Transaction;
-          
-          setTransactions(prev => 
-            prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t)
-          );
-        } 
-        else if (payload.eventType === 'DELETE') {
-          setTransactions(prev => prev.filter(t => t.id !== payload.old.id));
-        }
-      })
-      .subscribe();
+          // Handle different types of changes
+          if (payload.eventType === 'INSERT') {
+            const newTransaction = {
+              ...payload.new,
+              displayAmount: payload.new.amount
+            } as Transaction;
+            
+            setTransactions(prev => [newTransaction, ...prev.filter(t => t.id !== newTransaction.id)]);
+          } 
+          else if (payload.eventType === 'UPDATE') {
+            const updatedTransaction = {
+              ...payload.new,
+              displayAmount: payload.new.amount
+            } as Transaction;
+            
+            setTransactions(prev => 
+              prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t)
+            );
+          } 
+          else if (payload.eventType === 'DELETE') {
+            setTransactions(prev => prev.filter(t => t.id !== payload.old.id));
+          }
+        })
+        .subscribe((status) => {
+          console.log('Transaction channel status:', status);
+          if (status !== 'SUBSCRIBED') {
+            console.error('Failed to subscribe to transaction changes');
+          }
+        });
 
-    return () => {
-      supabase.removeChannel(transactionChannel);
-    };
+      return () => {
+        supabase.removeChannel(transactionChannel);
+      };
+    }, 1000); // 1 second delay
+
+    return () => clearTimeout(timeoutId);
   }, [user]);
 
+  // Fetch transactions when dependencies change
   useEffect(() => {
     if (user) {
       fetchTransactions();
@@ -293,6 +324,7 @@ export const useTransactions = () => {
   return {
     transactions,
     loading,
+    error,
     addTransaction,
     updateTransaction,
     deleteTransaction,

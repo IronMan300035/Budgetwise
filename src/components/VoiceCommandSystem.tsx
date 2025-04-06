@@ -4,6 +4,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Mic, MicOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 
 interface VoiceCommandSystemProps {
   isOpen?: boolean;
@@ -15,8 +17,9 @@ export function VoiceCommandSystem({ isOpen = false }: VoiceCommandSystemProps) 
   const [recognition, setRecognition] = useState<any>(null);
   const [showHint, setShowHint] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation(); // Get current location
+  const location = useLocation();
   const recognitionRef = useRef<any>(null);
+  const { user } = useAuth();
 
   // Initialize speech recognition
   useEffect(() => {
@@ -72,12 +75,36 @@ export function VoiceCommandSystem({ isOpen = false }: VoiceCommandSystemProps) 
       recognition.stop();
       setIsListening(false);
       setShowHint(false);
+      
+      // Log activity for stopping voice commands
+      if (user) {
+        logActivity('Voice command system deactivated');
+      }
     } else {
       setTranscript("");
       recognition.start();
       setIsListening(true);
       setShowHint(true);
       toast.success("Voice commands activated. Try saying 'go to dashboard'");
+      
+      // Log activity for starting voice commands
+      if (user) {
+        logActivity('Voice command system activated');
+      }
+    }
+  };
+
+  const logActivity = async (description: string) => {
+    if (!user) return;
+    
+    try {
+      await supabase.from('activity_logs').insert({
+        user_id: user.id,
+        activity_type: 'voice',
+        description
+      });
+    } catch (error) {
+      console.error('Error logging voice activity:', error);
     }
   };
 
@@ -88,66 +115,91 @@ export function VoiceCommandSystem({ isOpen = false }: VoiceCommandSystemProps) 
     console.log("Processing voice command:", command);
     
     // Navigation commands
-    if (command.includes("go to dashboard") || command.includes("open dashboard")) {
-      navigate("/dashboard");
-      toast.success("Navigating to Dashboard");
-    } else if (command.includes("go to budget") || command.includes("open budget")) {
-      navigate("/budget");
-      toast.success("Navigating to Budget");
-    } else if (command.includes("go to transactions") || command.includes("open transactions")) {
-      navigate("/transactions");
-      toast.success("Navigating to Transactions");
-    } else if (command.includes("go to investment") || command.includes("open investment") || 
-               command.includes("go to investments") || command.includes("open investments")) {
-      navigate("/investment");
-      toast.success("Navigating to Investment");
-    } else if (command.includes("go to settings") || command.includes("open settings")) {
-      navigate("/settings");
-      toast.success("Navigating to Settings");
-    } else if (command.includes("go to feedback") || command.includes("open feedback")) {
-      navigate("/feedback");
-      toast.success("Navigating to Feedback");
-    } else if (command.includes("go home") || command.includes("go to home")) {
-      navigate("/");
-      toast.success("Navigating to Home");
-    } else if (command.includes("sign out") || command.includes("logout") || command.includes("log out")) {
-      navigate("/logout");
-      toast.success("Signing out...");
+    if (command.includes("go to dashboard") || command.includes("open dashboard") || command.includes("take me to dashboard")) {
+      executeCommand(() => navigate("/dashboard"), "Navigating to Dashboard");
+    } 
+    else if (command.includes("go to budget") || command.includes("open budget") || command.includes("take me to budget")) {
+      executeCommand(() => navigate("/budget"), "Navigating to Budget");
+    } 
+    else if (command.includes("go to transactions") || command.includes("open transactions") || command.includes("take me to transactions") || 
+             command.includes("show transactions") || command.includes("view transactions")) {
+      executeCommand(() => navigate("/transactions"), "Navigating to Transactions");
+    } 
+    else if (command.includes("go to investment") || command.includes("open investment") || 
+             command.includes("go to investments") || command.includes("open investments") || 
+             command.includes("take me to investment") || command.includes("take me to investments") ||
+             command.includes("show investments") || command.includes("view investments")) {
+      executeCommand(() => navigate("/investment"), "Navigating to Investment");
+    } 
+    else if (command.includes("go to settings") || command.includes("open settings") || command.includes("take me to settings")) {
+      executeCommand(() => navigate("/settings"), "Navigating to Settings");
+    } 
+    else if (command.includes("go to feedback") || command.includes("open feedback") || command.includes("take me to feedback")) {
+      executeCommand(() => navigate("/feedback"), "Navigating to Feedback");
+    } 
+    else if (command.includes("go to activity") || command.includes("open activity") || 
+             command.includes("go to activity log") || command.includes("open activity log") ||
+             command.includes("take me to activity") || command.includes("take me to activity log")) {
+      executeCommand(() => navigate("/activity-log"), "Navigating to Activity Log");
+    }
+    else if (command.includes("go home") || command.includes("go to home") || command.includes("take me home")) {
+      executeCommand(() => navigate("/"), "Navigating to Home");
+    } 
+    else if (command.includes("sign out") || command.includes("logout") || command.includes("log out")) {
+      executeCommand(() => navigate("/logout"), "Signing out...");
     }
     
     // Dashboard specific commands - check if we're on the dashboard page
-    else if (location.pathname === "/dashboard" && command.includes("add income")) {
-      document.dispatchEvent(new CustomEvent('budgetwise:add-income'));
-      toast.success("Opening Add Income dialog");
+    else if ((location.pathname === "/dashboard" || command.includes("on dashboard")) && command.includes("add income")) {
+      executeCommand(() => {
+        document.dispatchEvent(new CustomEvent('budgetwise:add-income'));
+      }, "Opening Add Income dialog");
     } 
-    else if (location.pathname === "/dashboard" && command.includes("add expense")) {
-      document.dispatchEvent(new CustomEvent('budgetwise:add-expense'));
-      toast.success("Opening Add Expense dialog");
+    else if ((location.pathname === "/dashboard" || command.includes("on dashboard")) && command.includes("add expense")) {
+      executeCommand(() => {
+        document.dispatchEvent(new CustomEvent('budgetwise:add-expense'));
+      }, "Opening Add Expense dialog");
     } 
-    else if (location.pathname === "/dashboard" && command.includes("reset dashboard")) {
-      document.dispatchEvent(new CustomEvent('budgetwise:reset-dashboard'));
-      toast.success("Resetting Dashboard");
+    else if ((location.pathname === "/dashboard" || command.includes("on dashboard")) && command.includes("reset dashboard")) {
+      executeCommand(() => {
+        document.dispatchEvent(new CustomEvent('budgetwise:reset-dashboard'));
+      }, "Resetting Dashboard");
     }
     // If not on dashboard, but command is for dashboard actions, navigate first
     else if (command.includes("add income")) {
-      navigate("/dashboard");
-      setTimeout(() => {
-        document.dispatchEvent(new CustomEvent('budgetwise:add-income'));
-      }, 500);
-      toast.success("Navigating to Dashboard to add income");
+      executeCommand(() => {
+        navigate("/dashboard");
+        setTimeout(() => {
+          document.dispatchEvent(new CustomEvent('budgetwise:add-income'));
+        }, 500);
+      }, "Navigating to Dashboard to add income");
     } 
     else if (command.includes("add expense")) {
-      navigate("/dashboard");
-      setTimeout(() => {
-        document.dispatchEvent(new CustomEvent('budgetwise:add-expense'));
-      }, 500);
-      toast.success("Navigating to Dashboard to add expense");
+      executeCommand(() => {
+        navigate("/dashboard");
+        setTimeout(() => {
+          document.dispatchEvent(new CustomEvent('budgetwise:add-expense'));
+        }, 500);
+      }, "Navigating to Dashboard to add expense");
     }
     
     // Help command
     else if (command.includes("help") || command.includes("what can i say")) {
       toast.info("Available commands: go to dashboard, go to budget, go to transactions, add income, add expense, reset dashboard, sign out, go to feedback");
     }
+  };
+
+  const executeCommand = (action: () => void, message: string) => {
+    // Log the command execution
+    if (user) {
+      logActivity(`Voice command executed: ${message}`);
+    }
+    
+    // Show toast notification
+    toast.success(message);
+    
+    // Execute the action
+    action();
   };
 
   return (
