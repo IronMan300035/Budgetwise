@@ -16,6 +16,7 @@ interface AddTransactionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   type: "income" | "expense";
+  onSuccess?: () => void; // Add the optional onSuccess callback
 }
 
 const expenseCategories = [
@@ -27,7 +28,7 @@ const incomeCategories = [
   "Salary", "Business", "Investments", "Rent", "Gifts", "Other"
 ];
 
-export function AddTransactionDialog({ open, onOpenChange, type }: AddTransactionDialogProps) {
+export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: AddTransactionDialogProps) {
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
@@ -51,6 +52,11 @@ export function AddTransactionDialog({ open, onOpenChange, type }: AddTransactio
     
     resetForm();
     onOpenChange(false);
+    
+    // Call the onSuccess callback if provided
+    if (onSuccess) {
+      onSuccess();
+    }
   };
   
   const resetForm = () => {

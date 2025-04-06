@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -42,11 +41,13 @@ export default function Feedback() {
     setSubmitting(true);
     
     try {
-      const { error } = await supabase.from("feedback").insert({
-        user_id: user?.id || null,
-        rating,
-        review: review.trim() || null
-      });
+      const { error } = await supabase
+        .from('feedback')
+        .insert({
+          user_id: user?.id || null,
+          rating,
+          review: review.trim() || null
+        } as any);
       
       if (error) throw error;
       
@@ -54,7 +55,6 @@ export default function Feedback() {
       setRating(0);
       setReview("");
       
-      // Log activity if user is logged in
       if (user) {
         await supabase.from('activity_logs').insert({
           user_id: user.id,
@@ -71,7 +71,6 @@ export default function Feedback() {
     }
   };
 
-  // Render stars for rating
   const renderStars = () => {
     const stars = [];
     const displayRating = hoveredRating || rating;
