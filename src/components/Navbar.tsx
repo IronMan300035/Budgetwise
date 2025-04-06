@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -5,12 +6,12 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { CircleDollarSign, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { VoiceCommandButton } from '@/components/VoiceCommandButton';
 
 export default function Navbar() {
-  const { user, loading, logout } = useAuth();
-  const isMobile = useMobile();
+  const { user, loading, signOut } = useAuth();
+  const isMobile = useIsMobile();
   
   return (
     <nav className="bg-background border-b sticky top-0 z-50">
@@ -35,7 +36,7 @@ export default function Navbar() {
                 <Link to="/transactions">Transactions</Link>
                 <Link to="/profile">Profile</Link>
                 <Link to="/settings">Settings</Link>
-                <Button variant="outline" onClick={logout}>
+                <Button variant="outline" onClick={signOut}>
                   Log Out
                 </Button>
                 <ThemeToggle />
@@ -55,7 +56,7 @@ export default function Navbar() {
             ) : user ? (
               <>
                 <VoiceCommandButton />
-                <Button variant="outline" onClick={logout}>
+                <Button variant="outline" onClick={signOut}>
                   Log Out
                 </Button>
                 <ThemeToggle />

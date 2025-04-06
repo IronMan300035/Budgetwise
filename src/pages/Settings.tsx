@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Lock, User, Mail, Phone, Shield, LogOut, CreditCard } from "lucide-react";
 
 export default function Settings() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [firstName, setFirstName] = useState("");
@@ -33,16 +33,17 @@ export default function Settings() {
   // Set values from user data
   useEffect(() => {
     if (user) {
-      // Mock data for this example
-      setFirstName(user.name?.split(" ")[0] || "");
-      setLastName(user.name?.split(" ")[1] || "");
+      // Use user_metadata or default values if not available
+      const userMeta = user.user_metadata || {};
+      setFirstName(userMeta.first_name || "");
+      setLastName(userMeta.last_name || "");
       setEmail(user.email || "");
-      setPhone("+91 9876543210"); // Mock phone number
+      setPhone(userMeta.phone || "+91 9876543210"); // Default or from metadata
     }
   }, [user]);
   
   const handleLogout = async () => {
-    await logout();
+    await signOut();
     navigate('/login');
   };
   
