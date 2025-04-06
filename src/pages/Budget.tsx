@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -9,7 +8,7 @@ import { useTransactions } from "@/hooks/useTransactions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { CryptoCurrencyChart } from "@/components/CryptoCurrencyChart";
+import { LiveCryptoChart } from "@/components/LiveCryptoChart";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { Plus, AlertTriangle, Check, ArrowRight, PiggyBank, Wallet, CreditCard, ShoppingCart, Pencil, Trash2, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
@@ -256,7 +255,7 @@ export default function Budget() {
         
         <div className="mt-12">
           <h2 className="text-2xl font-bold mb-6">Cryptocurrency Markets</h2>
-          <CryptoCurrencyChart />
+          <LiveCryptoChart />
         </div>
         
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>

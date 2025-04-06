@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { CircleDollarSign, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { PasswordRequirements } from "@/components/PasswordRequirements";
 
 export default function Signup() {
   const [name, setName] = useState("");
@@ -72,6 +73,7 @@ export default function Signup() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              {password.length > 0 && <PasswordRequirements password={password} />}
             </div>
             <div className="space-y-2">
               <label htmlFor="confirmPassword" className="text-sm font-medium">Confirm Password</label>
@@ -82,6 +84,9 @@ export default function Signup() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
+              {confirmPassword.length > 0 && password !== confirmPassword && (
+                <p className="text-sm text-red-500 mt-1">Passwords do not match</p>
+              )}
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">

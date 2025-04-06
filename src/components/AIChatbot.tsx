@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Mic, MicOff, Send, User, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface Message {
   id: string;
@@ -52,6 +53,13 @@ export function AIChatbot() {
         recognitionInstance.onerror = (event: any) => {
           console.error("Speech recognition error", event.error);
           setIsListening(false);
+          
+          // Show error toast if microphone access is denied
+          if (event.error === 'not-allowed') {
+            toast.error("Microphone access denied", { 
+              description: "Please enable microphone access in your browser settings" 
+            });
+          }
         };
         
         setRecognition(recognitionInstance);
@@ -70,9 +78,16 @@ export function AIChatbot() {
         recognition.stop();
       } else {
         setInput("");
-        recognition.start();
+        try {
+          recognition.start();
+        } catch (err) {
+          console.error('Speech recognition start error:', err);
+          toast.error("Failed to start speech recognition");
+        }
       }
       setIsListening(!isListening);
+    } else {
+      toast.error("Speech recognition is not supported in your browser");
     }
   };
   
