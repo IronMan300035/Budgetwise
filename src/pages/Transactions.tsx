@@ -17,7 +17,14 @@ import { Plus, Search, Filter, ArrowDownUp, Trash2, Edit, Loader2 } from "lucide
 export default function Transactions() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { transactions, loading: txLoading, deleteTransaction, dateRange, setDateRange } = useTransactions();
+  const { 
+    transactions, 
+    loading: txLoading, 
+    deleteTransaction, 
+    dateRange, 
+    setDateRange,
+    refreshTransactions
+  } = useTransactions();
   const [addIncomeOpen, setAddIncomeOpen] = useState(false);
   const [addExpenseOpen, setAddExpenseOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -46,6 +53,19 @@ export default function Transactions() {
       });
     }
   }, [datePickerRange, setDateRange]);
+  
+  // Set up an interval to refresh data
+  useEffect(() => {
+    // Initial fetch
+    refreshTransactions();
+    
+    // Set up refresh interval (every 30 seconds)
+    const intervalId = setInterval(() => {
+      refreshTransactions();
+    }, 30000);
+    
+    return () => clearInterval(intervalId);
+  }, []);
   
   // Filter and sort transactions
   const filteredTransactions = transactions.filter(tx => {
@@ -82,6 +102,11 @@ export default function Transactions() {
       field,
       direction: sortBy.field === field && sortBy.direction === "asc" ? "desc" : "asc"
     });
+  };
+  
+  // Handler for adding transactions to ensure UI updates
+  const handleTransactionAdded = () => {
+    refreshTransactions();
   };
   
   if (authLoading || txLoading) {
@@ -226,7 +251,11 @@ export default function Transactions() {
                                   size="sm" 
                                   variant="ghost"
                                   className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-100"
-                                  onClick={() => deleteTransaction(tx.id)}
+                                  onClick={() => {
+                                    deleteTransaction(tx.id);
+                                    // Force refresh after a small delay
+                                    setTimeout(() => refreshTransactions(), 300);
+                                  }}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -247,12 +276,14 @@ export default function Transactions() {
             open={addIncomeOpen} 
             onOpenChange={setAddIncomeOpen}
             type="income" 
+            onSuccess={handleTransactionAdded}
           />
           
           <AddTransactionDialog 
             open={addExpenseOpen} 
             onOpenChange={setAddExpenseOpen}
             type="expense" 
+            onSuccess={handleTransactionAdded}
           />
         </div>
       </main>

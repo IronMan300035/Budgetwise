@@ -19,39 +19,42 @@ export function VoiceCommandSystem({ isOpen = false }: VoiceCommandSystemProps) 
 
   // Initialize speech recognition
   useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      const recognitionInstance = new SpeechRecognition();
-      recognitionInstance.continuous = true;
-      recognitionInstance.interimResults = true;
-      recognitionInstance.lang = "en-US";
-      
-      recognitionInstance.onresult = (event: any) => {
-        const transcript = Array.from(event.results)
-          .map((result: any) => result[0])
-          .map((result) => result.transcript)
-          .join("");
+    if (typeof window !== 'undefined') {
+      // @ts-ignore - TypeScript doesn't know about webkitSpeechRecognition
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognitionInstance = new SpeechRecognition();
+        recognitionInstance.continuous = true;
+        recognitionInstance.interimResults = true;
+        recognitionInstance.lang = "en-US";
         
-        setTranscript(transcript);
-        processCommand(transcript.toLowerCase());
-      };
-      
-      recognitionInstance.onerror = (event: any) => {
-        console.error("Speech recognition error", event.error);
-        setIsListening(false);
-        toast.error("Speech recognition error. Please try again.");
-      };
-      
-      recognitionInstance.onend = () => {
-        if (isListening) {
-          recognitionInstance.start();
-        }
-      };
-      
-      setRecognition(recognitionInstance);
-      recognitionRef.current = recognitionInstance;
-    } else {
-      toast.error("Speech recognition is not supported by your browser");
+        recognitionInstance.onresult = (event: any) => {
+          const transcript = Array.from(event.results)
+            .map((result: any) => result[0])
+            .map((result: any) => result.transcript)
+            .join("");
+          
+          setTranscript(transcript);
+          processCommand(transcript.toLowerCase());
+        };
+        
+        recognitionInstance.onerror = (event: any) => {
+          console.error("Speech recognition error", event.error);
+          setIsListening(false);
+          toast.error("Speech recognition error. Please try again.");
+        };
+        
+        recognitionInstance.onend = () => {
+          if (isListening) {
+            recognitionInstance.start();
+          }
+        };
+        
+        setRecognition(recognitionInstance);
+        recognitionRef.current = recognitionInstance;
+      } else {
+        toast.error("Speech recognition is not supported by your browser");
+      }
     }
 
     return () => {
@@ -99,6 +102,9 @@ export function VoiceCommandSystem({ isOpen = false }: VoiceCommandSystemProps) 
     } else if (command.includes("go to settings") || command.includes("open settings")) {
       navigate("/settings");
       toast.success("Navigating to Settings");
+    } else if (command.includes("go to feedback") || command.includes("open feedback")) {
+      navigate("/feedback");
+      toast.success("Navigating to Feedback");
     } else if (command.includes("go home") || command.includes("go to home")) {
       navigate("/");
       toast.success("Navigating to Home");
@@ -144,7 +150,7 @@ export function VoiceCommandSystem({ isOpen = false }: VoiceCommandSystemProps) 
     
     // Help command
     else if (command.includes("help") || command.includes("what can i say")) {
-      toast.info("Available commands: go to dashboard, go to budget, go to transactions, add income, add expense, reset dashboard, sign out");
+      toast.info("Available commands: go to dashboard, go to budget, go to transactions, add income, add expense, reset dashboard, sign out, go to feedback");
     }
   };
 

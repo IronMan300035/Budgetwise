@@ -34,7 +34,13 @@ import { supabase } from "@/integrations/supabase/client";
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { transactions, financialSummary, fetchTransactions, setDateRange } = useTransactions();
+  const { 
+    transactions, 
+    financialSummary, 
+    fetchTransactions, 
+    setDateRange, 
+    refreshTransactions
+  } = useTransactions();
   const { budgets, fetchBudgets } = useBudgets();
   const { investments, getInvestmentTotal, fetchInvestments } = useInvestments();
   const { logs, fetchLogs } = useActivityLogs();
@@ -70,6 +76,19 @@ export default function Dashboard() {
     };
   }, []);
   
+  // Set up an interval to refresh data
+  useEffect(() => {
+    // Initial fetch
+    refreshTransactions();
+    
+    // Set up refresh interval (every 30 seconds)
+    const intervalId = setInterval(() => {
+      refreshTransactions();
+    }, 30000);
+    
+    return () => clearInterval(intervalId);
+  }, []);
+
   // Calculate recent transactions
   const recentTransactions = useMemo(() => {
     return transactions
@@ -169,6 +188,19 @@ export default function Dashboard() {
       </div>
     );
   }
+  
+  // Function to handle adding transaction (for real-time UI updates)
+  const handleAddTransaction = (type: 'income' | 'expense') => {
+    if (type === 'income') {
+      setIsAddIncomeOpen(false);
+    } else {
+      setIsAddExpenseOpen(false);
+    }
+    // Refresh data after a short delay to ensure database has updated
+    setTimeout(() => {
+      refreshTransactions();
+    }, 300);
+  };
   
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800">
@@ -275,7 +307,7 @@ export default function Dashboard() {
         {/* Monthly Trends and Expenses Distribution */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div className="lg:col-span-2">
-            <MonthlyTrendsChart />
+            <MonthlyTrendsChart key={transactions.length} />
           </div>
           
           {/* Expense Distribution Pie Chart */}
@@ -377,12 +409,14 @@ export default function Dashboard() {
         open={isAddIncomeOpen} 
         onOpenChange={setIsAddIncomeOpen} 
         type="income" 
+        onSuccess={() => handleAddTransaction('income')}
       />
       
       <AddTransactionDialog 
         open={isAddExpenseOpen} 
         onOpenChange={setIsAddExpenseOpen} 
         type="expense" 
+        onSuccess={() => handleAddTransaction('expense')}
       />
     </div>
   );

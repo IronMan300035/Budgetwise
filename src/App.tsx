@@ -15,7 +15,6 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import VerifyEmail from "./pages/VerifyEmail";
 import Dashboard from "./pages/Dashboard";
-import Assistant from "./pages/Assistant";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import About from "./pages/About";
@@ -28,6 +27,7 @@ import Transactions from "./pages/Transactions";
 import Budget from "./pages/Budget";
 import Investment from "./pages/Investment";
 import ActivityLog from "./pages/ActivityLog";
+import Feedback from "./pages/Feedback";
 
 const queryClient = new QueryClient();
 
@@ -45,7 +45,6 @@ const App = () => (
               <Route path="/signup" element={<Signup />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/assistant" element={<Assistant />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/about" element={<About />} />
@@ -57,6 +56,7 @@ const App = () => (
               <Route path="/budget" element={<Budget />} />
               <Route path="/investment" element={<Investment />} />
               <Route path="/activity-log" element={<ActivityLog />} />
+              <Route path="/feedback" element={<Feedback />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

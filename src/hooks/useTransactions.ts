@@ -145,10 +145,8 @@ export const useTransactions = () => {
         displayAmount: data[0].amount // Start with original amount
       } as Transaction;
 
+      // Update transactions state directly for immediate UI update
       setTransactions(prev => [newTx, ...prev]);
-      
-      // Force a refresh to update financial summary
-      refreshTransactions();
       
       toast.success(`${newTransaction.type === 'income' ? 'Income' : 'Expense'} added successfully`, {
         className: "bg-green-100 text-green-800 border-green-200",
@@ -193,9 +191,6 @@ export const useTransactions = () => {
         prev.map(transaction => (transaction.id === id ? updatedTx : transaction))
       );
       
-      // Force a refresh to update financial summary
-      refreshTransactions();
-      
       toast.success('Transaction updated successfully', {
         className: "bg-green-100 text-green-800 border-green-200",
       });
@@ -224,10 +219,8 @@ export const useTransactions = () => {
         description: `Deleted transaction`
       });
 
+      // Update local state immediately
       setTransactions(prev => prev.filter(transaction => transaction.id !== id));
-      
-      // Force a refresh to update financial summary
-      refreshTransactions();
       
       toast.success('Transaction deleted successfully', {
         className: "bg-green-100 text-green-800 border-green-200",
@@ -247,11 +240,55 @@ export const useTransactions = () => {
     return financialSummary;
   };
 
+  // Setup real-time subscription for transactions
+  useEffect(() => {
+    if (!user) return;
+    
+    const transactionChannel = supabase
+      .channel('public:transactions')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'transactions',
+        filter: `user_id=eq.${user.id}`,
+      }, (payload) => {
+        console.log('Transaction change received:', payload);
+        
+        // Handle different types of changes
+        if (payload.eventType === 'INSERT') {
+          const newTransaction = {
+            ...payload.new,
+            displayAmount: payload.new.amount
+          } as Transaction;
+          
+          setTransactions(prev => [newTransaction, ...prev.filter(t => t.id !== newTransaction.id)]);
+        } 
+        else if (payload.eventType === 'UPDATE') {
+          const updatedTransaction = {
+            ...payload.new,
+            displayAmount: payload.new.amount
+          } as Transaction;
+          
+          setTransactions(prev => 
+            prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t)
+          );
+        } 
+        else if (payload.eventType === 'DELETE') {
+          setTransactions(prev => prev.filter(t => t.id !== payload.old.id));
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(transactionChannel);
+    };
+  }, [user]);
+
   useEffect(() => {
     if (user) {
       fetchTransactions();
     }
-  }, [user, dateRange, refreshTrigger]); // Add refreshTrigger to dependencies
+  }, [user, dateRange, refreshTrigger]); 
 
   return {
     transactions,

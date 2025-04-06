@@ -14,7 +14,8 @@ import {
   Landmark,
   Settings,
   Activity,
-  LogOut
+  LogOut,
+  MessageSquare
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -37,7 +38,7 @@ export default function Navbar() {
     { name: "Budgets", href: "/budget", requiresAuth: true },
     { name: "Transactions", href: "/transactions", requiresAuth: true },
     { name: "Investments", href: "/investment", requiresAuth: true },
-    // AI Assistant removed as requested
+    { name: "Feedback", href: "/feedback", requiresAuth: false }
   ];
   
   const isActive = (path: string) => {
@@ -72,9 +73,9 @@ export default function Navbar() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
             {/* Show navigation links only if authenticated */}
-            {user && (
-              <div className="flex space-x-1">
-                {navigation.map((item) => (
+            <div className="flex space-x-1">
+              {navigation.map((item) => (
+                (!item.requiresAuth || (item.requiresAuth && user)) && (
                   <Link
                     key={item.name}
                     to={item.href}
@@ -87,9 +88,9 @@ export default function Navbar() {
                   >
                     {item.name}
                   </Link>
-                ))}
-              </div>
-            )}
+                )
+              ))}
+            </div>
 
             <div className="flex items-center space-x-2 border-l ml-2 pl-2">
               {showCurrencyToggle && <ThemeToggle />}
@@ -158,54 +159,60 @@ export default function Navbar() {
                   <Link to="/signup" onClick={toggleMenu}>Sign up</Link>
                 </Button>
               </div>
-            ) : user ? (
+            ) : (
               <>
                 {navigation.map((item) => (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    onClick={toggleMenu}
-                    className={cn(
-                      "block px-3 py-2 rounded-md text-base font-medium",
-                      isActive(item.href)
-                        ? "bg-primary/10 text-primary"
-                        : "text-foreground/70 hover:bg-accent/50 hover:text-foreground"
-                    )}
-                  >
-                    {item.name}
-                  </Link>
+                  (!item.requiresAuth || (item.requiresAuth && user)) && (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      onClick={toggleMenu}
+                      className={cn(
+                        "block px-3 py-2 rounded-md text-base font-medium",
+                        isActive(item.href)
+                          ? "bg-primary/10 text-primary"
+                          : "text-foreground/70 hover:bg-accent/50 hover:text-foreground"
+                      )}
+                    >
+                      {item.name}
+                    </Link>
+                  )
                 ))}
-                <div className="border-t my-2"></div>
-                <Link
-                  to="/profile"
-                  onClick={toggleMenu}
-                  className="block px-3 py-2 rounded-md text-base font-medium text-foreground/70 hover:bg-accent/50 hover:text-foreground"
-                >
-                  Profile
-                </Link>
-                <Link
-                  to="/activity-log"
-                  onClick={toggleMenu}
-                  className="block px-3 py-2 rounded-md text-base font-medium text-foreground/70 hover:bg-accent/50 hover:text-foreground"
-                >
-                  Activity Log
-                </Link>
-                <Link
-                  to="/settings"
-                  onClick={toggleMenu}
-                  className="block px-3 py-2 rounded-md text-base font-medium text-foreground/70 hover:bg-accent/50 hover:text-foreground"
-                >
-                  Settings
-                </Link>
-                <Link
-                  to="/logout"
-                  onClick={toggleMenu}
-                  className="block px-3 py-2 rounded-md text-base font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center"
-                >
-                  <LogOut className="h-4 w-4 mr-2" /> Logout
-                </Link>
+                {user && (
+                  <>
+                    <div className="border-t my-2"></div>
+                    <Link
+                      to="/profile"
+                      onClick={toggleMenu}
+                      className="block px-3 py-2 rounded-md text-base font-medium text-foreground/70 hover:bg-accent/50 hover:text-foreground"
+                    >
+                      Profile
+                    </Link>
+                    <Link
+                      to="/activity-log"
+                      onClick={toggleMenu}
+                      className="block px-3 py-2 rounded-md text-base font-medium text-foreground/70 hover:bg-accent/50 hover:text-foreground"
+                    >
+                      Activity Log
+                    </Link>
+                    <Link
+                      to="/settings"
+                      onClick={toggleMenu}
+                      className="block px-3 py-2 rounded-md text-base font-medium text-foreground/70 hover:bg-accent/50 hover:text-foreground"
+                    >
+                      Settings
+                    </Link>
+                    <Link
+                      to="/logout"
+                      onClick={toggleMenu}
+                      className="block px-3 py-2 rounded-md text-base font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" /> Logout
+                    </Link>
+                  </>
+                )}
               </>
-            ) : null}
+            )}
           </div>
         </div>
       )}
