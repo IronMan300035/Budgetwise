@@ -3,6 +3,6 @@
 
 // Add Web Speech API declarations
 interface Window {
-  SpeechRecognition: any;
-  webkitSpeechRecognition: any;
+  SpeechRecognition: typeof SpeechRecognition;
+  webkitSpeechRecognition: typeof SpeechRecognition;
 }

@@ -109,7 +109,7 @@ export default function SmartChatbot() {
   const toggleRecording = () => {
     if (!isRecording) {
       // Check if browser supports SpeechRecognition
-      if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+      if (typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition)) {
         setIsRecording(true);
         
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -238,12 +238,4 @@ export default function SmartChatbot() {
       </Button>
     </div>
   );
-}
-
-// Extending the Window interface to include the SpeechRecognition
-declare global {
-  interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
-  }
 }
