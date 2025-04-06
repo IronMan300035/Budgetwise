@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -14,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { PieChart, Pie, Cell, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { ArrowRight, ArrowUpRight, CreditCard, DollarSign, IndianRupee, LineChart as LineChartIcon, PiggyBank, Plus, RefreshCw, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { format, parseISO, startOfMonth, endOfMonth, isSameMonth } from "date-fns";
+import { format, parseISO, startOfMonth, endOfMonth, isSameMonth, subMonths } from "date-fns";
 import { AddTransactionDialog } from "@/components/AddTransactionDialog";
 import { 
   AlertDialog,
@@ -30,7 +29,6 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-// Dashboard
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
@@ -45,11 +43,15 @@ export default function Dashboard() {
   const { investments, getInvestmentTotal, fetchInvestments } = useInvestments();
   const { logs, fetchLogs } = useActivityLogs();
   
-  // Dialog state for adding transactions
   const [isAddIncomeOpen, setIsAddIncomeOpen] = useState(false);
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
-  
+  const [previousMonthSummary, setPreviousMonthSummary] = useState({
+    income: 0,
+    expenses: 0,
+    balance: 0
+  });
+
   useEffect(() => {
     if (!authLoading && !user) {
       navigate("/login");
@@ -57,15 +59,12 @@ export default function Dashboard() {
   }, [authLoading, user, navigate]);
   
   useEffect(() => {
-    // Custom event listener for adding income via voice command
     const handleAddIncome = () => setIsAddIncomeOpen(true);
     document.addEventListener('budgetwise:add-income', handleAddIncome);
     
-    // Custom event listener for adding expense via voice command
     const handleAddExpense = () => setIsAddExpenseOpen(true);
     document.addEventListener('budgetwise:add-expense', handleAddExpense);
     
-    // Custom event listener for resetting dashboard via voice command
     const handleResetDashboard = () => resetDashboard();
     document.addEventListener('budgetwise:reset-dashboard', handleResetDashboard);
     
@@ -76,20 +75,52 @@ export default function Dashboard() {
     };
   }, []);
   
-  // Set up an interval to refresh data
   useEffect(() => {
-    // Initial fetch
     refreshTransactions();
+    fetchInvestments();
     
-    // Set up refresh interval (every 30 seconds)
+    const fetchPreviousMonthData = async () => {
+      if (!user) return;
+      
+      const lastMonth = subMonths(new Date(), 1);
+      const startDate = startOfMonth(lastMonth);
+      const endDate = endOfMonth(lastMonth);
+      
+      try {
+        const { data, error } = await supabase
+          .from('transactions')
+          .select('*')
+          .eq('user_id', user.id)
+          .gte('transaction_date', format(startDate, 'yyyy-MM-dd'))
+          .lte('transaction_date', format(endDate, 'yyyy-MM-dd'));
+          
+        if (error) throw error;
+        
+        if (data) {
+          const income = data.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0);
+          const expenses = data.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0);
+          
+          setPreviousMonthSummary({
+            income,
+            expenses,
+            balance: income - expenses
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching previous month data:", error);
+      }
+    };
+    
+    fetchPreviousMonthData();
+    
     const intervalId = setInterval(() => {
       refreshTransactions();
+      fetchInvestments();
     }, 30000);
     
     return () => clearInterval(intervalId);
-  }, []);
+  }, [user]);
 
-  // Calculate recent transactions
   const recentTransactions = useMemo(() => {
     return transactions
       .slice(0, 5)
@@ -99,7 +130,6 @@ export default function Dashboard() {
       }));
   }, [transactions]);
   
-  // Prepare expense data for pie chart
   const expensesByCategory = useMemo(() => {
     const categories: Record<string, number> = {};
     
@@ -119,19 +149,33 @@ export default function Dashboard() {
     }));
   }, [transactions]);
   
-  // Colors for the pie chart
+  const totalInvestments = useMemo(() => {
+    return getInvestmentTotal();
+  }, [investments, getInvestmentTotal]);
+  
+  const netWorth = useMemo(() => {
+    return financialSummary.balance - totalInvestments;
+  }, [financialSummary.balance, totalInvestments]);
+  
+  const calculatePercentChange = (current: number, previous: number) => {
+    if (previous === 0) return current > 0 ? 100 : 0;
+    return ((current - previous) / previous) * 100;
+  };
+  
+  const incomeChange = calculatePercentChange(financialSummary.income, previousMonthSummary.income);
+  const expenseChange = calculatePercentChange(financialSummary.expenses, previousMonthSummary.expenses);
+  const balanceChange = calculatePercentChange(financialSummary.balance, previousMonthSummary.balance);
+  
   const EXPENSE_COLORS = [
     "#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", 
     "#FF9F40", "#8AC24A", "#EA80FC", "#607D8B", "#E57373"
   ];
 
-  // Reset dashboard data function
   const resetDashboard = async () => {
     if (!user) return;
     
     setIsResetting(true);
     try {
-      // Delete all transactions for this user
       const { error: transactionError } = await supabase
         .from('transactions')
         .delete()
@@ -139,7 +183,6 @@ export default function Dashboard() {
       
       if (transactionError) throw transactionError;
       
-      // Delete all budgets for this user
       const { error: budgetError } = await supabase
         .from('budgets')
         .delete()
@@ -147,14 +190,12 @@ export default function Dashboard() {
       
       if (budgetError) throw budgetError;
       
-      // Log activity for reset
       await supabase.from('activity_logs').insert({
         user_id: user.id,
         activity_type: 'system',
         description: 'Reset dashboard data'
       });
       
-      // Refetch all data
       await Promise.all([
         fetchTransactions(),
         fetchBudgets(),
@@ -162,7 +203,6 @@ export default function Dashboard() {
         fetchLogs()
       ]);
       
-      // Reset date range filter to default
       setDateRange({
         start: null,
         end: null,
@@ -189,16 +229,15 @@ export default function Dashboard() {
     );
   }
   
-  // Function to handle adding transaction (for real-time UI updates)
   const handleAddTransaction = (type: 'income' | 'expense') => {
     if (type === 'income') {
       setIsAddIncomeOpen(false);
     } else {
       setIsAddExpenseOpen(false);
     }
-    // Refresh data after a short delay to ensure database has updated
     setTimeout(() => {
       refreshTransactions();
+      fetchInvestments();
     }, 300);
   };
   
@@ -253,19 +292,30 @@ export default function Dashboard() {
           </div>
         </div>
         
-        {/* Financial Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card className="bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-900/50">
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-medium text-green-800 dark:text-green-300">Total Income</CardTitle>
+              {incomeChange !== 0 && (
+                <div className={`text-xs flex items-center ${incomeChange > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {incomeChange > 0 ? <ArrowUpRight className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
+                  {Math.abs(incomeChange).toFixed(1)}% from last month
+                </div>
+              )}
             </CardHeader>
             <CardContent>
-              <div className="flex justify-between items-center">
-                <div className="text-2xl font-bold text-green-800 dark:text-green-200">
+              <div className="flex flex-col">
+                <div className="text-2xl font-bold text-green-800 dark:text-green-200 mb-1">
                   ₹{financialSummary.income.toLocaleString()}
                 </div>
-                <div className="h-10 w-10 rounded-full bg-green-200 dark:bg-green-800 flex items-center justify-center">
-                  <TrendingUp className="h-5 w-5 text-green-700 dark:text-green-300" />
+                <div className="flex justify-between items-center mt-2">
+                  <div className="h-10 w-10 rounded-full bg-green-200 dark:bg-green-800 flex items-center justify-center">
+                    <TrendingUp className="h-5 w-5 text-green-700 dark:text-green-300" />
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    <span className="block">Monthly target: ₹{(financialSummary.income * 1.1).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</span>
+                    <span className="block">Top source: Salary</span>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -274,14 +324,26 @@ export default function Dashboard() {
           <Card className="bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-900/20 dark:to-rose-900/20 border-red-200 dark:border-red-900/50">
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-medium text-red-800 dark:text-red-300">Total Expenses</CardTitle>
+              {expenseChange !== 0 && (
+                <div className={`text-xs flex items-center ${expenseChange < 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {expenseChange < 0 ? <ArrowUpRight className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
+                  {Math.abs(expenseChange).toFixed(1)}% from last month
+                </div>
+              )}
             </CardHeader>
             <CardContent>
-              <div className="flex justify-between items-center">
-                <div className="text-2xl font-bold text-red-800 dark:text-red-200">
+              <div className="flex flex-col">
+                <div className="text-2xl font-bold text-red-800 dark:text-red-200 mb-1">
                   ₹{financialSummary.expenses.toLocaleString()}
                 </div>
-                <div className="h-10 w-10 rounded-full bg-red-200 dark:bg-red-800 flex items-center justify-center">
-                  <TrendingDown className="h-5 w-5 text-red-700 dark:text-red-300" />
+                <div className="flex justify-between items-center mt-2">
+                  <div className="h-10 w-10 rounded-full bg-red-200 dark:bg-red-800 flex items-center justify-center">
+                    <TrendingDown className="h-5 w-5 text-red-700 dark:text-red-300" />
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    <span className="block">Budget limit: ₹{(financialSummary.income * 0.7).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</span>
+                    <span className="block">Investments: ₹{totalInvestments.toLocaleString()}</span>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -290,27 +352,37 @@ export default function Dashboard() {
           <Card className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-900/50">
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-medium text-blue-800 dark:text-blue-300">Net Balance</CardTitle>
+              {balanceChange !== 0 && (
+                <div className={`text-xs flex items-center ${balanceChange > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {balanceChange > 0 ? <ArrowUpRight className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
+                  {Math.abs(balanceChange).toFixed(1)}% from last month
+                </div>
+              )}
             </CardHeader>
             <CardContent>
-              <div className="flex justify-between items-center">
-                <div className="text-2xl font-bold text-blue-800 dark:text-blue-200">
+              <div className="flex flex-col">
+                <div className="text-2xl font-bold text-blue-800 dark:text-blue-200 mb-1">
                   ₹{financialSummary.balance.toLocaleString()}
                 </div>
-                <div className="h-10 w-10 rounded-full bg-blue-200 dark:bg-blue-800 flex items-center justify-center">
-                  <Wallet className="h-5 w-5 text-blue-700 dark:text-blue-300" />
+                <div className="flex justify-between items-center mt-2">
+                  <div className="h-10 w-10 rounded-full bg-blue-200 dark:bg-blue-800 flex items-center justify-center">
+                    <Wallet className="h-5 w-5 text-blue-700 dark:text-blue-300" />
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    <span className="block">Net worth: ₹{netWorth.toLocaleString()}</span>
+                    <span className="block">Savings rate: {financialSummary.income > 0 ? ((financialSummary.balance / financialSummary.income) * 100).toFixed(1) : 0}%</span>
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
         
-        {/* Monthly Trends and Expenses Distribution */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div className="lg:col-span-2">
             <MonthlyTrendsChart key={transactions.length} />
           </div>
           
-          {/* Expense Distribution Pie Chart */}
           <Card>
             <CardHeader>
               <CardTitle>Expense Distribution</CardTitle>
@@ -349,7 +421,6 @@ export default function Dashboard() {
           </Card>
         </div>
         
-        {/* Recent Transactions */}
         <div className="mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -404,7 +475,6 @@ export default function Dashboard() {
       
       <Footer />
       
-      {/* Transaction Dialogs */}
       <AddTransactionDialog 
         open={isAddIncomeOpen} 
         onOpenChange={setIsAddIncomeOpen} 

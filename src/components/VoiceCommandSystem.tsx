@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Mic, MicOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -15,6 +15,7 @@ export function VoiceCommandSystem({ isOpen = false }: VoiceCommandSystemProps) 
   const [recognition, setRecognition] = useState<any>(null);
   const [showHint, setShowHint] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation(); // Get current location
   const recognitionRef = useRef<any>(null);
 
   // Initialize speech recognition
@@ -96,7 +97,8 @@ export function VoiceCommandSystem({ isOpen = false }: VoiceCommandSystemProps) 
     } else if (command.includes("go to transactions") || command.includes("open transactions")) {
       navigate("/transactions");
       toast.success("Navigating to Transactions");
-    } else if (command.includes("go to investment") || command.includes("open investment")) {
+    } else if (command.includes("go to investment") || command.includes("open investment") || 
+               command.includes("go to investments") || command.includes("open investments")) {
       navigate("/investment");
       toast.success("Navigating to Investment");
     } else if (command.includes("go to settings") || command.includes("open settings")) {
@@ -113,39 +115,33 @@ export function VoiceCommandSystem({ isOpen = false }: VoiceCommandSystemProps) 
       toast.success("Signing out...");
     }
     
-    // Dashboard specific commands
+    // Dashboard specific commands - check if we're on the dashboard page
+    else if (location.pathname === "/dashboard" && command.includes("add income")) {
+      document.dispatchEvent(new CustomEvent('budgetwise:add-income'));
+      toast.success("Opening Add Income dialog");
+    } 
+    else if (location.pathname === "/dashboard" && command.includes("add expense")) {
+      document.dispatchEvent(new CustomEvent('budgetwise:add-expense'));
+      toast.success("Opening Add Expense dialog");
+    } 
+    else if (location.pathname === "/dashboard" && command.includes("reset dashboard")) {
+      document.dispatchEvent(new CustomEvent('budgetwise:reset-dashboard'));
+      toast.success("Resetting Dashboard");
+    }
+    // If not on dashboard, but command is for dashboard actions, navigate first
     else if (command.includes("add income")) {
-      if (window.location.pathname === "/dashboard") {
-        // Trigger the add income dialog
+      navigate("/dashboard");
+      setTimeout(() => {
         document.dispatchEvent(new CustomEvent('budgetwise:add-income'));
-        toast.success("Opening Add Income dialog");
-      } else {
-        navigate("/dashboard");
-        setTimeout(() => {
-          document.dispatchEvent(new CustomEvent('budgetwise:add-income'));
-        }, 500);
-        toast.success("Navigating to Dashboard to add income");
-      }
-    } else if (command.includes("add expense")) {
-      if (window.location.pathname === "/dashboard") {
-        // Trigger the add expense dialog
+      }, 500);
+      toast.success("Navigating to Dashboard to add income");
+    } 
+    else if (command.includes("add expense")) {
+      navigate("/dashboard");
+      setTimeout(() => {
         document.dispatchEvent(new CustomEvent('budgetwise:add-expense'));
-        toast.success("Opening Add Expense dialog");
-      } else {
-        navigate("/dashboard");
-        setTimeout(() => {
-          document.dispatchEvent(new CustomEvent('budgetwise:add-expense'));
-        }, 500);
-        toast.success("Navigating to Dashboard to add expense");
-      }
-    } else if (command.includes("reset dashboard")) {
-      if (window.location.pathname === "/dashboard") {
-        // Trigger dashboard reset
-        document.dispatchEvent(new CustomEvent('budgetwise:reset-dashboard'));
-        toast.success("Resetting Dashboard");
-      } else {
-        toast.info("Please navigate to Dashboard first to reset it");
-      }
+      }, 500);
+      toast.success("Navigating to Dashboard to add expense");
     }
     
     // Help command

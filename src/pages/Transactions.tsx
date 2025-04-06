@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -13,6 +12,7 @@ import { DateRangePicker } from "@/components/DateRangePicker";
 import { DateRange } from "react-day-picker";
 import { format, subDays } from "date-fns";
 import { Plus, Search, Filter, ArrowDownUp, Trash2, Edit, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Transactions() {
   const navigate = useNavigate();
@@ -37,14 +37,12 @@ export default function Transactions() {
     to: new Date()
   });
   
-  // Check authentication
   useEffect(() => {
     if (!authLoading && !user) {
       navigate("/login");
     }
   }, [authLoading, user, navigate]);
   
-  // Update date range filter
   useEffect(() => {
     if (datePickerRange?.from && datePickerRange?.to) {
       setDateRange({
@@ -54,20 +52,36 @@ export default function Transactions() {
     }
   }, [datePickerRange, setDateRange]);
   
-  // Set up an interval to refresh data
   useEffect(() => {
-    // Initial fetch
     refreshTransactions();
     
-    // Set up refresh interval (every 30 seconds)
     const intervalId = setInterval(() => {
       refreshTransactions();
-    }, 30000);
+    }, 15000);
     
     return () => clearInterval(intervalId);
-  }, []);
+  }, [refreshTransactions]);
   
-  // Filter and sort transactions
+  useEffect(() => {
+    if (!user) return;
+    
+    const channel = supabase
+      .channel('public:transactions')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'transactions',
+      }, (payload) => {
+        console.log('Transaction change detected:', payload);
+        refreshTransactions();
+      })
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, refreshTransactions]);
+  
   const filteredTransactions = transactions.filter(tx => {
     const searchLower = searchTerm.toLowerCase();
     return (
@@ -104,8 +118,12 @@ export default function Transactions() {
     });
   };
   
-  // Handler for adding transactions to ensure UI updates
   const handleTransactionAdded = () => {
+    refreshTransactions();
+  };
+  
+  const handleDeleteTransaction = async (id: string) => {
+    await deleteTransaction(id);
     refreshTransactions();
   };
   
@@ -140,6 +158,14 @@ export default function Transactions() {
                 className="bg-red-500 hover:bg-red-600 text-white"
               >
                 <Plus className="h-4 w-4 mr-1" /> Add Expense
+              </Button>
+              
+              <Button
+                onClick={() => refreshTransactions()}
+                variant="outline"
+                className="border-blue-300 hover:bg-blue-50"
+              >
+                <Loader2 className="h-4 w-4 mr-1" /> Refresh
               </Button>
             </div>
           </div>
@@ -251,11 +277,7 @@ export default function Transactions() {
                                   size="sm" 
                                   variant="ghost"
                                   className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-100"
-                                  onClick={() => {
-                                    deleteTransaction(tx.id);
-                                    // Force refresh after a small delay
-                                    setTimeout(() => refreshTransactions(), 300);
-                                  }}
+                                  onClick={() => handleDeleteTransaction(tx.id)}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -271,7 +293,6 @@ export default function Transactions() {
             </CardContent>
           </Card>
           
-          {/* Add transaction dialogs */}
           <AddTransactionDialog 
             open={addIncomeOpen} 
             onOpenChange={setAddIncomeOpen}

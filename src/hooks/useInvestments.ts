@@ -50,6 +50,19 @@ export const useInvestments = () => {
     if (!user) return;
 
     try {
+      // First, create an expense transaction for this investment
+      const { error: transactionError } = await supabase.from('transactions').insert({
+        user_id: user.id,
+        type: 'expense',
+        amount: newInvestment.amount,
+        category: `Investment: ${newInvestment.type}`,
+        description: `Investment in ${newInvestment.name}`,
+        transaction_date: newInvestment.purchase_date
+      });
+
+      if (transactionError) throw transactionError;
+
+      // Then create the investment record
       const { data, error } = await supabase.from('investments').insert({
         ...newInvestment,
         user_id: user.id,
@@ -84,6 +97,36 @@ export const useInvestments = () => {
     if (!user) return;
 
     try {
+      // Get the original investment data
+      const { data: originalData, error: fetchError } = await supabase
+        .from('investments')
+        .select('*')
+        .eq('id', id)
+        .single();
+        
+      if (fetchError) throw fetchError;
+      
+      // If amount changed, create an adjustment transaction
+      if (updates.amount && updates.amount !== originalData.amount) {
+        const amountDifference = updates.amount - originalData.amount;
+        
+        if (amountDifference !== 0) {
+          // If amount increased, add an expense transaction for the additional investment
+          // If amount decreased, add an income transaction for the reduction in investment
+          const { error: transactionError } = await supabase.from('transactions').insert({
+            user_id: user.id,
+            type: amountDifference > 0 ? 'expense' : 'income',
+            amount: Math.abs(amountDifference),
+            category: `Investment Adjustment: ${originalData.type}`,
+            description: `Adjustment for ${originalData.name}`,
+            transaction_date: updates.purchase_date || originalData.purchase_date
+          });
+          
+          if (transactionError) throw transactionError;
+        }
+      }
+      
+      // Update the investment
       const { data, error } = await supabase
         .from('investments')
         .update(updates)
@@ -121,6 +164,28 @@ export const useInvestments = () => {
     if (!user) return;
 
     try {
+      // Get the investment data before deleting
+      const { data: investment, error: fetchError } = await supabase
+        .from('investments')
+        .select('*')
+        .eq('id', id)
+        .single();
+        
+      if (fetchError) throw fetchError;
+      
+      // Add an income transaction to offset the investment (representing liquidation)
+      const { error: transactionError } = await supabase.from('transactions').insert({
+        user_id: user.id,
+        type: 'income',
+        amount: investment.amount,
+        category: `Investment Liquidation: ${investment.type}`,
+        description: `Liquidated ${investment.name}`,
+        transaction_date: new Date().toISOString().split('T')[0]
+      });
+      
+      if (transactionError) throw transactionError;
+
+      // Delete the investment
       const { error } = await supabase.from('investments').delete().eq('id', id);
       if (error) throw error;
 
@@ -128,7 +193,7 @@ export const useInvestments = () => {
       await supabase.from('activity_logs').insert({
         user_id: user.id,
         activity_type: 'investment',
-        description: `Deleted investment`
+        description: `Deleted investment: ${investment.name}`
       });
 
       setInvestments(prev => prev.filter(investment => investment.id !== id));

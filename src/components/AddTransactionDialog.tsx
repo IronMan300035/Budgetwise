@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -34,7 +33,7 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
   const [description, setDescription] = useState("");
   const [date, setDate] = useState<Date>(new Date());
   const { addTransaction } = useTransactions();
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
