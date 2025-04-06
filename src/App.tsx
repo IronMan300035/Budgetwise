@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "./context/AuthContext";
 import SmartChatbot from "./components/SmartChatbot";
+import { VoiceCommandSystem } from "./components/VoiceCommandSystem";
 
 // Pages
 import Index from "./pages/Index";
@@ -61,6 +62,8 @@ const App = () => (
             </Routes>
             {/* Add the chatbot component here */}
             <SmartChatbot />
+            {/* Add the voice command system component */}
+            <VoiceCommandSystem />
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

@@ -28,15 +28,16 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 // Dashboard
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { transactions, financialSummary, fetchTransactions } = useTransactions();
-  const { budgets } = useBudgets();
-  const { investments, getInvestmentTotal } = useInvestments();
-  const { logs } = useActivityLogs();
+  const { transactions, financialSummary, fetchTransactions, setDateRange } = useTransactions();
+  const { budgets, fetchBudgets } = useBudgets();
+  const { investments, getInvestmentTotal, fetchInvestments } = useInvestments();
+  const { logs, fetchLogs } = useActivityLogs();
   
   // Dialog state for adding transactions
   const [isAddIncomeOpen, setIsAddIncomeOpen] = useState(false);
@@ -48,6 +49,26 @@ export default function Dashboard() {
       navigate("/login");
     }
   }, [authLoading, user, navigate]);
+  
+  useEffect(() => {
+    // Custom event listener for adding income via voice command
+    const handleAddIncome = () => setIsAddIncomeOpen(true);
+    document.addEventListener('budgetwise:add-income', handleAddIncome);
+    
+    // Custom event listener for adding expense via voice command
+    const handleAddExpense = () => setIsAddExpenseOpen(true);
+    document.addEventListener('budgetwise:add-expense', handleAddExpense);
+    
+    // Custom event listener for resetting dashboard via voice command
+    const handleResetDashboard = () => resetDashboard();
+    document.addEventListener('budgetwise:reset-dashboard', handleResetDashboard);
+    
+    return () => {
+      document.removeEventListener('budgetwise:add-income', handleAddIncome);
+      document.removeEventListener('budgetwise:add-expense', handleAddExpense);
+      document.removeEventListener('budgetwise:reset-dashboard', handleResetDashboard);
+    };
+  }, []);
   
   // Calculate recent transactions
   const recentTransactions = useMemo(() => {
@@ -87,14 +108,52 @@ export default function Dashboard() {
 
   // Reset dashboard data function
   const resetDashboard = async () => {
+    if (!user) return;
+    
     setIsResetting(true);
     try {
-      // Refetch transactions to reset data
-      await fetchTransactions();
+      // Delete all transactions for this user
+      const { error: transactionError } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('user_id', user.id);
+      
+      if (transactionError) throw transactionError;
+      
+      // Delete all budgets for this user
+      const { error: budgetError } = await supabase
+        .from('budgets')
+        .delete()
+        .eq('user_id', user.id);
+      
+      if (budgetError) throw budgetError;
+      
+      // Log activity for reset
+      await supabase.from('activity_logs').insert({
+        user_id: user.id,
+        activity_type: 'system',
+        description: 'Reset dashboard data'
+      });
+      
+      // Refetch all data
+      await Promise.all([
+        fetchTransactions(),
+        fetchBudgets(),
+        fetchInvestments(),
+        fetchLogs()
+      ]);
+      
+      // Reset date range filter to default
+      setDateRange({
+        start: null,
+        end: null,
+      });
+      
       toast.success("Dashboard has been reset successfully", {
         className: "bg-green-100 text-green-800 border-green-200",
       });
     } catch (error) {
+      console.error("Error resetting dashboard:", error);
       toast.error("Failed to reset dashboard", {
         className: "bg-red-100 text-red-800 border-red-200",
       });
@@ -150,7 +209,7 @@ export default function Dashboard() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Reset Dashboard</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will reset the dashboard to its default state. This action cannot be undone.
+                    This will delete all your transactions, budgets and reset your dashboard to its initial state. This action cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

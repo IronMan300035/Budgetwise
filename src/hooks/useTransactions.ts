@@ -14,6 +14,7 @@ export interface Transaction {
   description: string | null;
   transaction_date: string;
   created_at: string;
+  displayAmount?: number;  // For currency conversion display
 }
 
 export const useTransactions = () => {
@@ -25,6 +26,12 @@ export const useTransactions = () => {
   });
   const { user } = useAuth();
   const [currentCurrency, setCurrentCurrency] = useState<{ code: string; symbol: string }>({ code: "USD", symbol: "$" });
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // Add a refresh trigger
+
+  // Force a refresh of transactions
+  const refreshTransactions = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   // Use memoized calculations for financial totals to improve performance
   const financialSummary = useMemo(() => {
@@ -84,6 +91,7 @@ export const useTransactions = () => {
       let query = supabase
         .from('transactions')
         .select('*')
+        .eq('user_id', user.id)  // Make sure we only get this user's transactions
         .order('transaction_date', { ascending: false });
 
       if (dateRange.start) {
@@ -139,6 +147,9 @@ export const useTransactions = () => {
 
       setTransactions(prev => [newTx, ...prev]);
       
+      // Force a refresh to update financial summary
+      refreshTransactions();
+      
       toast.success(`${newTransaction.type === 'income' ? 'Income' : 'Expense'} added successfully`, {
         className: "bg-green-100 text-green-800 border-green-200",
       });
@@ -182,6 +193,9 @@ export const useTransactions = () => {
         prev.map(transaction => (transaction.id === id ? updatedTx : transaction))
       );
       
+      // Force a refresh to update financial summary
+      refreshTransactions();
+      
       toast.success('Transaction updated successfully', {
         className: "bg-green-100 text-green-800 border-green-200",
       });
@@ -212,6 +226,9 @@ export const useTransactions = () => {
 
       setTransactions(prev => prev.filter(transaction => transaction.id !== id));
       
+      // Force a refresh to update financial summary
+      refreshTransactions();
+      
       toast.success('Transaction deleted successfully', {
         className: "bg-green-100 text-green-800 border-green-200",
       });
@@ -234,7 +251,7 @@ export const useTransactions = () => {
     if (user) {
       fetchTransactions();
     }
-  }, [user, dateRange]);
+  }, [user, dateRange, refreshTrigger]); // Add refreshTrigger to dependencies
 
   return {
     transactions,
@@ -244,6 +261,7 @@ export const useTransactions = () => {
     deleteTransaction,
     getTransactionSummary,
     fetchTransactions,
+    refreshTransactions,
     setDateRange,
     dateRange,
     currentCurrency,

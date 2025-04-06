@@ -12,7 +12,6 @@ import {
   PieChart,
   Wallet,
   Landmark,
-  MessageSquare,
   Settings,
   Activity,
   LogOut
@@ -38,7 +37,7 @@ export default function Navbar() {
     { name: "Budgets", href: "/budget", requiresAuth: true },
     { name: "Transactions", href: "/transactions", requiresAuth: true },
     { name: "Investments", href: "/investment", requiresAuth: true },
-    { name: "AI Assistant", href: "/assistant", requiresAuth: true },
+    // AI Assistant removed as requested
   ];
   
   const isActive = (path: string) => {
@@ -49,7 +48,6 @@ export default function Navbar() {
                         location.pathname.includes("/budget") || 
                         location.pathname.includes("/transactions") || 
                         location.pathname.includes("/investment") || 
-                        location.pathname.includes("/assistant") || 
                         location.pathname.includes("/profile") || 
                         location.pathname.includes("/settings") || 
                         location.pathname.includes("/activity-log");
