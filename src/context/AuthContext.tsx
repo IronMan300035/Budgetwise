@@ -1,7 +1,4 @@
 
-// This is a read-only file, but we need to modify it to add auth activity logging
-// We'll create a new context that extends the original one
-
 import React, { createContext, useState, useEffect, useContext, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +21,23 @@ interface AuthContextType {
     error: Error | null;
     data: {} | null;
   }>;
+  // Add missing verification methods
+  verifyEmail: (otp: string) => Promise<{
+    error: Error | null;
+    data: any;
+  }>;
+  requestEmailVerification: () => Promise<{
+    error: Error | null;
+    data: any;
+  }>;
+  verifyPhone: (otp: string) => Promise<{
+    error: Error | null;
+    data: any;
+  }>;
+  requestPhoneVerification: () => Promise<{
+    error: Error | null;
+    data: any;
+  }>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -34,6 +48,11 @@ const AuthContext = createContext<AuthContextType>({
   signIn: async () => ({ error: null, data: null }),
   signOut: async () => {},
   resetPassword: async () => ({ error: null, data: null }),
+  // Add missing verification methods to default context
+  verifyEmail: async () => ({ error: null, data: null }),
+  requestEmailVerification: async () => ({ error: null, data: null }),
+  verifyPhone: async () => ({ error: null, data: null }),
+  requestPhoneVerification: async () => ({ error: null, data: null }),
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -135,6 +154,57 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Add the implementation for the missing verification methods
+  const verifyEmail = async (otp: string) => {
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: user?.email || '',
+        token: otp,
+        type: 'email'
+      });
+      return { data, error };
+    } catch (error) {
+      return { error: error as Error, data: null };
+    }
+  };
+
+  const requestEmailVerification = async () => {
+    try {
+      const { data, error } = await supabase.auth.resend({
+        type: 'signup',
+        email: user?.email || '',
+      });
+      return { data, error };
+    } catch (error) {
+      return { error: error as Error, data: null };
+    }
+  };
+
+  const verifyPhone = async (otp: string) => {
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone: user?.phone || '',
+        token: otp,
+        type: 'sms'
+      });
+      return { data, error };
+    } catch (error) {
+      return { error: error as Error, data: null };
+    }
+  };
+
+  const requestPhoneVerification = async () => {
+    try {
+      const { data, error } = await supabase.auth.resend({
+        type: 'sms',
+        phone: user?.phone || '',
+      });
+      return { data, error };
+    } catch (error) {
+      return { error: error as Error, data: null };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -145,6 +215,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         signIn,
         signOut,
         resetPassword,
+        verifyEmail,
+        requestEmailVerification,
+        verifyPhone,
+        requestPhoneVerification
       }}
     >
       {children}

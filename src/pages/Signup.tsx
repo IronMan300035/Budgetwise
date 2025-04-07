@@ -45,8 +45,9 @@ export default function Signup() {
       return;
     }
     
-    // Pass name as first name parameter according to the function definition in AuthContext
-    await signUp(email, password, name);
+    // Fix: Only pass email and password to signUp function
+    // Store name in user metadata if needed in the future
+    await signUp(email, password);
   };
   
   // Calculate overall password strength
