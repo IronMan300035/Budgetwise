@@ -14,6 +14,7 @@ export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { signUp, user, loading } = useAuth();
   
   // Redirect if already logged in
@@ -58,19 +59,25 @@ export default function Signup() {
       return;
     }
     
+    // Prevent multiple submissions
+    if (isSubmitting) return;
+    
     try {
+      setIsSubmitting(true);
       // Pass only email and password to signUp function
       const { error, data } = await signUp(email, password);
       
       if (error) {
-        toast.error(error.message);
+        toast.error(error.message || "Signup failed. Please try again.");
       } else if (data) {
         toast.success("Account created successfully! Check your email to verify your account.");
         navigate('/login');
       }
     } catch (error) {
-      toast.error("An unexpected error occurred during sign up");
       console.error("Signup error:", error);
+      toast.error("An unexpected error occurred during sign up");
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
@@ -214,9 +221,9 @@ export default function Signup() {
             <Button 
               type="submit" 
               className="w-full" 
-              disabled={loading || !Object.values(validations).every(Boolean)}
+              disabled={loading || isSubmitting || !Object.values(validations).every(Boolean)}
             >
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {(loading || isSubmitting) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign up
             </Button>
             <div className="text-center text-sm">

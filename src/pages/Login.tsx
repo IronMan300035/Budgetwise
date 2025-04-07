@@ -22,6 +22,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [forgotEmail, setForgotEmail] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
   const { signIn, user, loading, resetPassword } = useAuth();
   
@@ -40,18 +41,24 @@ export default function Login() {
       return;
     }
     
+    // Prevent multiple submissions
+    if (isSubmitting) return;
+    
     try {
+      setIsSubmitting(true);
       const { error, data } = await signIn(email, password);
       
       if (error) {
-        toast.error(error.message);
+        toast.error(error.message || "Login failed. Please try again.");
       } else if (data) {
         toast.success("Logged in successfully!");
         navigate('/dashboard');
       }
     } catch (error) {
-      toast.error("An unexpected error occurred. Please try again.");
       console.error("Login error:", error);
+      toast.error("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -63,20 +70,23 @@ export default function Login() {
       return;
     }
     
+    if (resetLoading) return;
+    
     setResetLoading(true);
     
     try {
       const { error } = await resetPassword(forgotEmail);
       
       if (error) {
-        toast.error(error.message);
+        toast.error(error.message || "Failed to send reset password link");
       } else {
         toast.success("Password reset link sent to your email");
         setForgotPasswordOpen(false);
+        setForgotEmail("");
       }
     } catch (error) {
-      toast.error("Failed to send reset password link");
       console.error("Reset password error:", error);
+      toast.error("Failed to send reset password link");
     } finally {
       setResetLoading(false);
     }
@@ -128,8 +138,12 @@ export default function Login() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={loading || isSubmitting}
+            >
+              {(loading || isSubmitting) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign in
             </Button>
             <div className="text-center text-sm">
@@ -166,7 +180,12 @@ export default function Login() {
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setForgotPasswordOpen(false)}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setForgotPasswordOpen(false)}
+                disabled={resetLoading}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={resetLoading}>

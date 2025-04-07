@@ -62,21 +62,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { logAuthActivity } = useActivityLogs();
 
   useEffect(() => {
+    let mounted = true;
+    
     // Get initial session
     const getCurrentSession = async () => {
-      setLoading(true);
       try {
+        setLoading(true);
         const { data } = await supabase.auth.getSession();
-        setSession(data.session);
-        setUser(data.session?.user || null);
         
-        if (data.session?.user) {
-          console.info("Auth state change: INITIAL_SESSION");
+        if (mounted) {
+          setSession(data.session);
+          setUser(data.session?.user || null);
+          
+          if (data.session?.user) {
+            console.info("Auth state change: INITIAL_SESSION");
+          }
         }
       } catch (error) {
         console.error("Error getting current session:", error);
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -84,17 +91,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Listen for auth changes
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
+      (event, currentSession) => {
         console.info("Auth state change:", event);
-        setSession(currentSession);
-        setUser(currentSession?.user || null);
-        setLoading(false);
+        
+        if (mounted) {
+          setSession(currentSession);
+          setUser(currentSession?.user || null);
+          setLoading(false);
+        }
         
         // Log auth activity
         if (event === 'SIGNED_IN') {
           // We use a timeout to ensure the user is set in the useActivityLogs hook
           setTimeout(() => {
-            logAuthActivity('sign-in');
+            if (mounted) {
+              logAuthActivity('sign-in');
+            }
           }, 500);
         } else if (event === 'SIGNED_OUT') {
           // No need for timeout here as we log before signing out
@@ -104,6 +116,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     );
 
     return () => {
+      mounted = false;
       authListener.subscription.unsubscribe();
     };
   }, [logAuthActivity]);
@@ -135,12 +148,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
-    // Log sign-out activity before actual sign-out
-    if (user) {
-      await logAuthActivity('sign-out');
+    try {
+      // Log sign-out activity before actual sign-out
+      if (user) {
+        await logAuthActivity('sign-out');
+      }
+      
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("Error signing out:", error);
     }
-    
-    await supabase.auth.signOut();
   };
 
   const resetPassword = async (email: string) => {

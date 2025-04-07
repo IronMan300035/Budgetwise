@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { CircleDollarSign, Loader2, Check, X } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -53,18 +54,33 @@ export default function ResetPassword() {
       return;
     }
     
+    if (resetting) return;
+    
     setResetting(true);
     
     try {
-      // Here you would normally use supabase.auth.updateUser to reset password
-      // But for this example, we'll just simulate success
-      setTimeout(() => {
+      // Get the access token from the URL
+      const accessToken = searchParams.get('access_token');
+      
+      if (!accessToken) {
+        toast.error("Invalid or missing reset token");
+        return;
+      }
+      
+      // Update the user's password using Supabase directly
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+      
+      if (error) {
+        toast.error(error.message || "Failed to reset password");
+      } else {
         toast.success("Password reset successfully!");
         navigate('/login');
-      }, 1500);
+      }
     } catch (error) {
-      toast.error("Failed to reset password");
       console.error("Reset password error:", error);
+      toast.error("Failed to reset password");
     } finally {
       setResetting(false);
     }
@@ -195,9 +211,9 @@ export default function ResetPassword() {
             </Button>
             <div className="text-center text-sm">
               Remember your password?{" "}
-              <a href="/login" className="text-primary hover:underline">
+              <Link to="/login" className="text-primary hover:underline">
                 Sign in
-              </a>
+              </Link>
             </div>
           </CardFooter>
         </form>
