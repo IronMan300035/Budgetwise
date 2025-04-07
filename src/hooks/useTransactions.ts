@@ -20,6 +20,7 @@ export interface Transaction {
 export const useTransactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({
     start: null,
     end: null,
@@ -59,7 +60,12 @@ export const useTransactions = () => {
     // Load the saved currency from localStorage
     const savedCurrency = localStorage.getItem("currency");
     if (savedCurrency) {
-      setCurrentCurrency(JSON.parse(savedCurrency));
+      try {
+        setCurrentCurrency(JSON.parse(savedCurrency));
+      } catch (e) {
+        console.error("Failed to parse saved currency:", e);
+        // Fall back to default currency
+      }
     }
 
     // Listen for currency changes
@@ -84,9 +90,14 @@ export const useTransactions = () => {
   }, []);
 
   const fetchTransactions = async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
+    setError(null);
+    
     try {
       let query = supabase
         .from('transactions')
@@ -115,7 +126,8 @@ export const useTransactions = () => {
       setTransactions(processedData as Transaction[]);
     } catch (error: any) {
       console.error('Error fetching transactions:', error);
-      toast.error('Failed to load transactions');
+      setError(error);
+      toast.error('Failed to load transactions: ' + (error.message || 'Unknown error'));
     } finally {
       setLoading(false);
     }
@@ -285,14 +297,27 @@ export const useTransactions = () => {
   }, [user]);
 
   useEffect(() => {
+    let isMounted = true;
+    
     if (user) {
-      fetchTransactions();
+      // Use a small timeout to prevent rapid consecutive fetch attempts
+      const timeoutId = setTimeout(() => {
+        if (isMounted) {
+          fetchTransactions();
+        }
+      }, 100);
+      
+      return () => {
+        clearTimeout(timeoutId);
+        isMounted = false;
+      };
     }
   }, [user, dateRange, refreshTrigger]); 
 
   return {
     transactions,
     loading,
+    error,
     addTransaction,
     updateTransaction,
     deleteTransaction,
@@ -306,3 +331,4 @@ export const useTransactions = () => {
     financialSummary
   };
 };
+

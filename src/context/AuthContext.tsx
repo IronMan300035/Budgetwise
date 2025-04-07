@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -46,11 +45,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Log user activity when signing in or signing out
         if (event === 'SIGNED_IN' && newSession?.user) {
+          // Use setTimeout to prevent Supabase listener deadlock
           setTimeout(() => {
-            logActivity('auth', 'User signed in');
+            logActivity('login', 'User signed in');
           }, 0);
         } else if (event === 'SIGNED_OUT') {
-          // We don't log sign out as this requires auth
+          // No need to log signout here as we already do it in the signOut function
         }
       }
     );
@@ -70,13 +70,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) return;
     
     try {
-      await supabase.from('activity_logs').insert({
+      const { error } = await supabase.from('activity_logs').insert({
         user_id: user.id,
         activity_type: activityType,
         description: description
       });
+      
+      if (error) {
+        console.error("Failed to log activity:", error);
+      }
     } catch (error) {
-      console.error("Failed to log activity:", error);
+      console.error("Error in logActivity:", error);
     }
   };
 
@@ -150,7 +154,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Sign out
   const signOut = async () => {
     try {
-      await logActivity('auth', 'User signed out');
+      // Log the sign out activity before actually signing out
+      if (user) {
+        await logActivity('logout', 'User signed out');
+      }
+      
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       

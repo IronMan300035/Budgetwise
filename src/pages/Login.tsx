@@ -10,11 +10,19 @@ import { CircleDollarSign, Loader2 } from "lucide-react";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { signIn, loading } = useAuth();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await signIn(email, password);
+    if (isSubmitting) return; // Prevent multiple submissions
+    
+    setIsSubmitting(true);
+    try {
+      await signIn(email, password);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   return (
@@ -59,8 +67,8 @@ export default function Login() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" className="w-full" disabled={loading || isSubmitting}>
+              {(loading || isSubmitting) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign in
             </Button>
             <div className="text-center text-sm">

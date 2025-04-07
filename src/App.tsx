@@ -28,6 +28,7 @@ import Budget from "./pages/Budget";
 import Investment from "./pages/Investment";
 import ActivityLog from "./pages/ActivityLog";
 import Feedback from "./pages/Feedback";
+import ForgotPassword from "./pages/ForgotPassword";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,7 @@ const App = () => (
               <Route path="/investment" element={<Investment />} />
               <Route path="/activity-log" element={<ActivityLog />} />
               <Route path="/feedback" element={<Feedback />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
