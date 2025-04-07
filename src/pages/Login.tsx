@@ -7,12 +7,23 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { CircleDollarSign, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { signIn, user, loading } = useAuth();
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
+  const { signIn, user, loading, resetPassword } = useAuth();
   
   // Redirect if already logged in
   useEffect(() => {
@@ -23,6 +34,11 @@ export default function Login() {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      toast.error("Please fill in all fields");
+      return;
+    }
     
     try {
       const { error, data } = await signIn(email, password);
@@ -36,6 +52,33 @@ export default function Login() {
     } catch (error) {
       toast.error("An unexpected error occurred. Please try again.");
       console.error("Login error:", error);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!forgotEmail) {
+      toast.error("Please enter your email address");
+      return;
+    }
+    
+    setResetLoading(true);
+    
+    try {
+      const { error } = await resetPassword(forgotEmail);
+      
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Password reset link sent to your email");
+        setForgotPasswordOpen(false);
+      }
+    } catch (error) {
+      toast.error("Failed to send reset password link");
+      console.error("Reset password error:", error);
+    } finally {
+      setResetLoading(false);
     }
   };
   
@@ -67,9 +110,13 @@ export default function Login() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label htmlFor="password" className="text-sm font-medium">Password</label>
-                <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+                <button 
+                  type="button"
+                  onClick={() => setForgotPasswordOpen(true)} 
+                  className="text-xs text-primary hover:underline"
+                >
                   Forgot password?
-                </Link>
+                </button>
               </div>
               <Input
                 id="password"
@@ -94,6 +141,42 @@ export default function Login() {
           </CardFooter>
         </form>
       </Card>
+      
+      {/* Forgot Password Dialog */}
+      <Dialog open={forgotPasswordOpen} onOpenChange={setForgotPasswordOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Reset password</DialogTitle>
+            <DialogDescription>
+              Enter your email address and we'll send you a link to reset your password.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleResetPassword}>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <label htmlFor="forgot-email" className="text-sm font-medium">Email</label>
+                <Input
+                  id="forgot-email"
+                  type="email"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  required
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setForgotPasswordOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={resetLoading}>
+                {resetLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Send reset link
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
