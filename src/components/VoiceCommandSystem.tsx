@@ -20,6 +20,7 @@ export function VoiceCommandSystem({ isOpen = false }: VoiceCommandSystemProps) 
   const location = useLocation();
   const recognitionRef = useRef<any>(null);
   const { user } = useAuth();
+  const [commandProcessed, setCommandProcessed] = useState(false);
 
   // Initialize speech recognition
   useEffect(() => {
@@ -28,18 +29,16 @@ export function VoiceCommandSystem({ isOpen = false }: VoiceCommandSystemProps) 
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (SpeechRecognition) {
         const recognitionInstance = new SpeechRecognition();
-        recognitionInstance.continuous = true;
-        recognitionInstance.interimResults = true;
+        recognitionInstance.continuous = false; // Changed to false to get complete commands
+        recognitionInstance.interimResults = false; // Changed to false for final commands only
         recognitionInstance.lang = "en-US";
         
         recognitionInstance.onresult = (event: any) => {
-          const transcript = Array.from(event.results)
-            .map((result: any) => result[0])
-            .map((result: any) => result.transcript)
-            .join("");
+          const finalTranscript = event.results[0][0].transcript;
+          setTranscript(finalTranscript);
           
-          setTranscript(transcript);
-          processCommand(transcript.toLowerCase());
+          // Process the command after receiving final result
+          processCommand(finalTranscript.toLowerCase());
         };
         
         recognitionInstance.onerror = (event: any) => {
@@ -49,7 +48,8 @@ export function VoiceCommandSystem({ isOpen = false }: VoiceCommandSystemProps) 
         };
         
         recognitionInstance.onend = () => {
-          if (isListening) {
+          // Restart listening if we're still in listening mode and not processing a command
+          if (isListening && !commandProcessed) {
             recognitionInstance.start();
           }
         };
@@ -85,6 +85,7 @@ export function VoiceCommandSystem({ isOpen = false }: VoiceCommandSystemProps) 
       recognition.start();
       setIsListening(true);
       setShowHint(true);
+      setCommandProcessed(false);
       toast.success("Voice commands activated. Try saying 'go to dashboard'");
       
       // Log activity for starting voice commands
@@ -113,6 +114,9 @@ export function VoiceCommandSystem({ isOpen = false }: VoiceCommandSystemProps) 
     if (!command.trim() || !isListening) return;
     
     console.log("Processing voice command:", command);
+    
+    // Set flag to prevent multiple command processing
+    setCommandProcessed(true);
     
     // Navigation commands
     if (command.includes("go to dashboard") || command.includes("open dashboard") || command.includes("take me to dashboard")) {
@@ -186,6 +190,21 @@ export function VoiceCommandSystem({ isOpen = false }: VoiceCommandSystemProps) 
     // Help command
     else if (command.includes("help") || command.includes("what can i say")) {
       toast.info("Available commands: go to dashboard, go to budget, go to transactions, add income, add expense, reset dashboard, sign out, go to feedback");
+      setCommandProcessed(false);
+      if (recognition) {
+        setTimeout(() => {
+          recognition.start();
+        }, 100);
+      }
+    }
+    else {
+      toast.info("Command not recognized. Try saying 'help' for available commands.");
+      setCommandProcessed(false);
+      if (recognition) {
+        setTimeout(() => {
+          recognition.start();
+        }, 100);
+      }
     }
   };
 
@@ -200,6 +219,14 @@ export function VoiceCommandSystem({ isOpen = false }: VoiceCommandSystemProps) 
     
     // Execute the action
     action();
+    
+    // Give time for the action to complete, then restart listening
+    setTimeout(() => {
+      setCommandProcessed(false);
+      if (isListening && recognition) {
+        recognition.start();
+      }
+    }, 1000);
   };
 
   return (

@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,11 +9,19 @@ import { CircleDollarSign, Loader2, Check, X } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Signup() {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const { signUp, loading } = useAuth();
+  const { signUp, user, loading } = useAuth();
+  
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
   
   // Password validation states
   const [validations, setValidations] = useState({
@@ -45,9 +53,15 @@ export default function Signup() {
       return;
     }
     
-    // Fix: Only pass email and password to signUp function
-    // Store name in user metadata if needed in the future
-    await signUp(email, password);
+    // Pass only email and password to signUp function - this fixes the argument error
+    const { error, data } = await signUp(email, password);
+    
+    if (error) {
+      toast.error(error.message);
+    } else if (data) {
+      toast.success("Account created successfully! Check your email to verify your account.");
+      navigate('/login');
+    }
   };
   
   // Calculate overall password strength

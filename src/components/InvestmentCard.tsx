@@ -5,7 +5,13 @@ import { Button } from "@/components/ui/button";
 import { LucideIcon, ArrowRight } from "lucide-react";
 import { Investment } from '@/hooks/useInvestments';
 
-interface InvestmentCardProps {
+// Define the base props for all investment cards
+interface BaseInvestmentCardProps {
+  onClick: () => void;
+}
+
+// Define a type for investment option cards
+interface InvestmentOptionCardProps extends BaseInvestmentCardProps {
   title: string;
   description: string;
   icon: LucideIcon;
@@ -13,14 +19,25 @@ interface InvestmentCardProps {
   returns: string;
   risk: string;
   minInvestment: string;
-  onClick: () => void;
-  investment?: Investment; // Add optional investment prop
 }
 
-export const InvestmentCard: React.FC<InvestmentCardProps | { investment: Investment }> = (props) => {
-  // Check if we're receiving an investment object or regular props
-  if ('investment' in props) {
-    const { investment } = props;
+// Define a type for user investment cards
+interface UserInvestmentCardProps extends BaseInvestmentCardProps {
+  investment: Investment;
+}
+
+// Create a union type to represent either kind of card
+type InvestmentCardProps = InvestmentOptionCardProps | UserInvestmentCardProps;
+
+// Function to check if props are for a user investment
+function isUserInvestment(props: InvestmentCardProps): props is UserInvestmentCardProps {
+  return 'investment' in props;
+}
+
+export const InvestmentCard: React.FC<InvestmentCardProps> = (props) => {
+  // Handle user investment display
+  if (isUserInvestment(props)) {
+    const { investment, onClick } = props;
     // This is a user's existing investment
     const formattedAmount = new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -61,6 +78,7 @@ export const InvestmentCard: React.FC<InvestmentCardProps | { investment: Invest
               </div>
             </div>
             <Button 
+              onClick={onClick}
               className="w-full flex justify-between"
               style={{ backgroundColor: '#3366FF' }}
             >
@@ -73,7 +91,7 @@ export const InvestmentCard: React.FC<InvestmentCardProps | { investment: Invest
     );
   }
   
-  // Regular investment option display (original code)
+  // Handle investment option display
   const { title, description, icon: IconComponent, color, returns, risk, minInvestment, onClick } = props;
   
   return (

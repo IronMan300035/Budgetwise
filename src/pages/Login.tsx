@@ -1,20 +1,42 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { CircleDollarSign, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { signIn, loading } = useAuth();
+  const { signIn, user, loading } = useAuth();
+  
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await signIn(email, password);
+    
+    try {
+      const { error, data } = await signIn(email, password);
+      
+      if (error) {
+        toast.error(error.message);
+      } else if (data) {
+        toast.success("Logged in successfully!");
+        navigate('/dashboard');
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred. Please try again.");
+      console.error("Login error:", error);
+    }
   };
   
   return (
