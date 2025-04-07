@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
@@ -36,7 +35,6 @@ export default function Navbar() {
   const navigation = [
     { name: "Dashboard", href: "/dashboard", requiresAuth: true },
     { name: "Budgets", href: "/budget", requiresAuth: true },
-    { name: "Transactions", href: "/transactions", requiresAuth: true },
     { name: "Investments", href: "/investment", requiresAuth: true },
     { name: "Feedback", href: "/feedback", requiresAuth: false }
   ];
