@@ -49,6 +49,13 @@ export default function Investment() {
       maximumFractionDigits: 0,
     }).format(value);
   };
+  
+  // Handle investment card click
+  const handleInvestmentClick = (investmentId: string) => {
+    // You could navigate to a detailed view or open a modal
+    console.log(`Viewing investment details for: ${investmentId}`);
+    // Example: navigate(`/investment/${investmentId}`);
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
@@ -142,7 +149,11 @@ export default function Investment() {
                       </div>
                     ) : (
                       investments.map((investment) => (
-                        <InvestmentCard key={investment.id} investment={investment} />
+                        <InvestmentCard 
+                          key={investment.id} 
+                          investment={investment} 
+                          onClick={() => handleInvestmentClick(investment.id)}
+                        />
                       ))
                     )}
                   </div>
