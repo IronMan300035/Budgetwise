@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -11,13 +10,12 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { toast } from "sonner";
 
 interface AddTransactionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   type: "income" | "expense";
-  onSuccess?: () => void;
+  onSuccess?: () => void; // Add the optional onSuccess callback
 }
 
 const expenseCategories = [
@@ -40,29 +38,23 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
     e.preventDefault();
     
     if (!amount || !category) {
-      toast.error("Please fill in all required fields");
       return;
     }
     
-    try {
-      await addTransaction({
-        type,
-        amount: parseFloat(amount),
-        category,
-        description,
-        transaction_date: format(date, "yyyy-MM-dd"),
-      });
-      
-      resetForm();
-      onOpenChange(false);
-      
-      // Call the onSuccess callback if provided
-      if (onSuccess) {
-        onSuccess();
-      }
-    } catch (error) {
-      console.error("Error adding transaction:", error);
-      toast.error("Failed to add transaction. Please try again.");
+    await addTransaction({
+      type,
+      amount: parseFloat(amount),
+      category,
+      description,
+      transaction_date: format(date, "yyyy-MM-dd"),
+    });
+    
+    resetForm();
+    onOpenChange(false);
+    
+    // Call the onSuccess callback if provided
+    if (onSuccess) {
+      onSuccess();
     }
   };
   

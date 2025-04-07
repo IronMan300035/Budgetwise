@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,20 +9,11 @@ import { CircleDollarSign, Loader2, Check, X } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Signup() {
-  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { signUp, user, loading } = useAuth();
-  
-  // Redirect if already logged in
-  useEffect(() => {
-    if (user) {
-      navigate('/dashboard');
-    }
-  }, [user, navigate]);
+  const { signUp, loading } = useAuth();
   
   // Password validation states
   const [validations, setValidations] = useState({
@@ -54,31 +45,8 @@ export default function Signup() {
       return;
     }
     
-    if (!name || !email || !password) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-    
-    // Prevent multiple submissions
-    if (isSubmitting) return;
-    
-    try {
-      setIsSubmitting(true);
-      // Pass only email and password to signUp function
-      const { error, data } = await signUp(email, password);
-      
-      if (error) {
-        toast.error(error.message || "Signup failed. Please try again.");
-      } else if (data) {
-        toast.success("Account created successfully! Check your email to verify your account.");
-        navigate('/login');
-      }
-    } catch (error) {
-      console.error("Signup error:", error);
-      toast.error("An unexpected error occurred during sign up");
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Pass name as first name parameter according to the function definition in AuthContext
+    await signUp(email, password, name);
   };
   
   // Calculate overall password strength
@@ -221,9 +189,9 @@ export default function Signup() {
             <Button 
               type="submit" 
               className="w-full" 
-              disabled={loading || isSubmitting || !Object.values(validations).every(Boolean)}
+              disabled={loading || !Object.values(validations).every(Boolean)}
             >
-              {(loading || isSubmitting) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign up
             </Button>
             <div className="text-center text-sm">

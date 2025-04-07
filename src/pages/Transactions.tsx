@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -12,17 +11,15 @@ import { AddTransactionDialog } from "@/components/AddTransactionDialog";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { DateRange } from "react-day-picker";
 import { format, subDays } from "date-fns";
-import { Plus, Search, Filter, ArrowDownUp, Trash2, Edit, Loader2, AlertCircle } from "lucide-react";
+import { Plus, Search, Filter, ArrowDownUp, Trash2, Edit, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 export default function Transactions() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { 
     transactions, 
-    loading: txLoading,
-    error: txError,
+    loading: txLoading, 
     deleteTransaction, 
     dateRange, 
     setDateRange,
@@ -60,7 +57,7 @@ export default function Transactions() {
     
     const intervalId = setInterval(() => {
       refreshTransactions();
-    }, 30000); // Reduced frequency to 30 seconds to prevent too many requests
+    }, 15000);
     
     return () => clearInterval(intervalId);
   }, [refreshTransactions]);
@@ -74,7 +71,6 @@ export default function Transactions() {
         event: '*',
         schema: 'public',
         table: 'transactions',
-        filter: `user_id=eq.${user.id}`,
       }, (payload) => {
         console.log('Transaction change detected:', payload);
         refreshTransactions();
@@ -124,27 +120,18 @@ export default function Transactions() {
   
   const handleTransactionAdded = () => {
     refreshTransactions();
-    toast.success("Transaction added successfully!");
   };
   
   const handleDeleteTransaction = async (id: string) => {
-    const result = await deleteTransaction(id);
-    if (result) {
-      refreshTransactions();
-      toast.success("Transaction deleted successfully");
-    }
-  };
-  
-  const handleRetry = () => {
+    await deleteTransaction(id);
     refreshTransactions();
-    toast.info("Retrying to load transactions...");
   };
   
-  if (authLoading) {
+  if (authLoading || txLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-        <p className="mt-4 text-lg">Loading...</p>
+        <p className="mt-4 text-lg">Loading transactions...</p>
       </div>
     );
   }
@@ -174,7 +161,7 @@ export default function Transactions() {
               </Button>
               
               <Button
-                onClick={handleRetry}
+                onClick={() => refreshTransactions()}
                 variant="outline"
                 className="border-blue-300 hover:bg-blue-50"
               >
@@ -183,153 +170,128 @@ export default function Transactions() {
             </div>
           </div>
           
-          {txError ? (
-            <Card className="mb-6 border-red-200">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-2 text-red-500">
-                  <AlertCircle className="h-5 w-5" />
-                  <p>Error loading transactions: {txError}</p>
-                </div>
-                <Button 
-                  onClick={handleRetry} 
-                  variant="outline" 
-                  className="mt-4"
-                >
-                  Retry
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="overflow-hidden shadow-lg mb-8">
-              <CardHeader>
-                <CardTitle>Transaction History</CardTitle>
-                <CardDescription>View, filter, and manage your financial transactions</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex flex-col md:flex-row justify-between gap-4">
-                  <div className="relative w-full md:max-w-xs">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      placeholder="Search transactions..." 
-                      className="pl-10"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                  
-                  <DateRangePicker 
-                    dateRange={datePickerRange}
-                    onDateRangeChange={setDatePickerRange}
+          <Card className="overflow-hidden shadow-lg mb-8">
+            <CardHeader>
+              <CardTitle>Transaction History</CardTitle>
+              <CardDescription>View, filter, and manage your financial transactions</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex flex-col md:flex-row justify-between gap-4">
+                <div className="relative w-full md:max-w-xs">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Search transactions..." 
+                    className="pl-10"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
                 
-                {txLoading ? (
-                  <div className="py-12 flex flex-col items-center justify-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mb-4"></div>
-                    <p>Loading transactions...</p>
-                  </div>
-                ) : (
-                  <div className="rounded-md border overflow-hidden">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="bg-muted/50">
-                            <th 
-                              className="px-4 py-3 text-left cursor-pointer hover:bg-muted"
-                              onClick={() => handleSort("transaction_date")}
-                            >
-                              <div className="flex items-center">
-                                Date
-                                {sortBy.field === "transaction_date" && (
-                                  <ArrowDownUp 
-                                    className={`h-3 w-3 ml-1 ${sortBy.direction === "desc" ? "rotate-180" : ""}`} 
-                                  />
-                                )}
+                <DateRangePicker 
+                  dateRange={datePickerRange}
+                  onDateRangeChange={setDatePickerRange}
+                />
+              </div>
+              
+              <div className="rounded-md border overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-muted/50">
+                        <th 
+                          className="px-4 py-3 text-left cursor-pointer hover:bg-muted"
+                          onClick={() => handleSort("transaction_date")}
+                        >
+                          <div className="flex items-center">
+                            Date
+                            {sortBy.field === "transaction_date" && (
+                              <ArrowDownUp 
+                                className={`h-3 w-3 ml-1 ${sortBy.direction === "desc" ? "rotate-180" : ""}`} 
+                              />
+                            )}
+                          </div>
+                        </th>
+                        <th className="px-4 py-3 text-left">Description</th>
+                        <th 
+                          className="px-4 py-3 text-left cursor-pointer hover:bg-muted"
+                          onClick={() => handleSort("category")}
+                        >
+                          <div className="flex items-center">
+                            Category
+                            {sortBy.field === "category" && (
+                              <ArrowDownUp 
+                                className={`h-3 w-3 ml-1 ${sortBy.direction === "desc" ? "rotate-180" : ""}`} 
+                              />
+                            )}
+                          </div>
+                        </th>
+                        <th 
+                          className="px-4 py-3 text-right cursor-pointer hover:bg-muted"
+                          onClick={() => handleSort("amount")}
+                        >
+                          <div className="flex items-center justify-end">
+                            Amount
+                            {sortBy.field === "amount" && (
+                              <ArrowDownUp 
+                                className={`h-3 w-3 ml-1 ${sortBy.direction === "desc" ? "rotate-180" : ""}`} 
+                              />
+                            )}
+                          </div>
+                        </th>
+                        <th className="px-4 py-3 text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sortedTransactions.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
+                            No transactions found. Use the buttons above to add income or expenses.
+                          </td>
+                        </tr>
+                      ) : (
+                        sortedTransactions.map((tx) => (
+                          <tr key={tx.id} className="border-t hover:bg-muted/30">
+                            <td className="px-4 py-3">
+                              {format(new Date(tx.transaction_date), "MMM dd, yyyy")}
+                            </td>
+                            <td className="px-4 py-3">
+                              {tx.description || tx.category}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className="px-2 py-1 rounded-full text-xs bg-muted">{tx.category}</span>
+                            </td>
+                            <td className={`px-4 py-3 text-right font-medium ${tx.type === "expense" ? "text-red-500" : "text-green-500"}`}>
+                              {tx.type === "expense" ? "-" : "+"}₹{Number(tx.amount).toLocaleString()}
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex justify-center gap-2">
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0"
+                                  onClick={() => {}}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-100"
+                                  onClick={() => handleDeleteTransaction(tx.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
                               </div>
-                            </th>
-                            <th className="px-4 py-3 text-left">Description</th>
-                            <th 
-                              className="px-4 py-3 text-left cursor-pointer hover:bg-muted"
-                              onClick={() => handleSort("category")}
-                            >
-                              <div className="flex items-center">
-                                Category
-                                {sortBy.field === "category" && (
-                                  <ArrowDownUp 
-                                    className={`h-3 w-3 ml-1 ${sortBy.direction === "desc" ? "rotate-180" : ""}`} 
-                                  />
-                                )}
-                              </div>
-                            </th>
-                            <th 
-                              className="px-4 py-3 text-right cursor-pointer hover:bg-muted"
-                              onClick={() => handleSort("amount")}
-                            >
-                              <div className="flex items-center justify-end">
-                                Amount
-                                {sortBy.field === "amount" && (
-                                  <ArrowDownUp 
-                                    className={`h-3 w-3 ml-1 ${sortBy.direction === "desc" ? "rotate-180" : ""}`} 
-                                  />
-                                )}
-                              </div>
-                            </th>
-                            <th className="px-4 py-3 text-center">Actions</th>
+                            </td>
                           </tr>
-                        </thead>
-                        <tbody>
-                          {sortedTransactions.length === 0 ? (
-                            <tr>
-                              <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
-                                No transactions found. Use the buttons above to add income or expenses.
-                              </td>
-                            </tr>
-                          ) : (
-                            sortedTransactions.map((tx) => (
-                              <tr key={tx.id} className="border-t hover:bg-muted/30">
-                                <td className="px-4 py-3">
-                                  {format(new Date(tx.transaction_date), "MMM dd, yyyy")}
-                                </td>
-                                <td className="px-4 py-3">
-                                  {tx.description || tx.category}
-                                </td>
-                                <td className="px-4 py-3">
-                                  <span className="px-2 py-1 rounded-full text-xs bg-muted">{tx.category}</span>
-                                </td>
-                                <td className={`px-4 py-3 text-right font-medium ${tx.type === "expense" ? "text-red-500" : "text-green-500"}`}>
-                                  {tx.type === "expense" ? "-" : "+"}₹{Number(tx.amount).toLocaleString()}
-                                </td>
-                                <td className="px-4 py-3">
-                                  <div className="flex justify-center gap-2">
-                                    <Button 
-                                      size="sm" 
-                                      variant="ghost"
-                                      className="h-8 w-8 p-0"
-                                      onClick={() => {}}
-                                    >
-                                      <Edit className="h-4 w-4" />
-                                    </Button>
-                                    <Button 
-                                      size="sm" 
-                                      variant="ghost"
-                                      className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-100"
-                                      onClick={() => handleDeleteTransaction(tx.id)}
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
           
           <AddTransactionDialog 
             open={addIncomeOpen} 
