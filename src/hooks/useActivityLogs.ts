@@ -41,7 +41,7 @@ export const useActivityLogs = () => {
 
   // Add an activity log
   const addActivityLog = async (activityType: string, description: string) => {
-    if (!user) return;
+    if (!user) return false;
 
     try {
       const { data, error } = await supabase.from('activity_logs').insert({

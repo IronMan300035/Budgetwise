@@ -8,14 +8,16 @@ import { useActivityLogs } from "@/hooks/useActivityLogs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-import { Activity, Calendar, Clock, FileText, BarChart4, Wallet } from "lucide-react";
+import { Activity, Calendar, Clock, FileText, BarChart4, Wallet, Search, UserRound } from "lucide-react";
 
 export default function ActivityLog() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { logs, loading: logsLoading } = useActivityLogs();
   const [activeTab, setActiveTab] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState<string>("");
   
   useEffect(() => {
     if (!authLoading && !user) {
@@ -30,9 +32,13 @@ export default function ActivityLog() {
       case 'investment':
         return <BarChart4 className="h-4 w-4" />;
       case 'login':
-        return <Clock className="h-4 w-4" />;
+        return <UserRound className="h-4 w-4" />;
+      case 'logout':
+        return <UserRound className="h-4 w-4" />;
       case 'budget':
         return <FileText className="h-4 w-4" />;
+      case 'banking':
+        return <Wallet className="h-4 w-4" />;
       default:
         return <Activity className="h-4 w-4" />;
     }
@@ -46,16 +52,31 @@ export default function ActivityLog() {
         return "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300";
       case 'login':
         return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
+      case 'logout':
+        return "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300";
       case 'budget':
         return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300";
+      case 'banking':
+        return "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300";
       default:
         return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
     }
   };
   
-  const filteredLogs = activeTab === "all" 
-    ? logs 
-    : logs.filter(log => log.activity_type.toLowerCase() === activeTab);
+  const filteredLogs = logs
+    .filter(log => {
+      // Filter by tab
+      if (activeTab !== "all" && log.activity_type.toLowerCase() !== activeTab) {
+        return false;
+      }
+      
+      // Filter by search term
+      if (searchTerm && !log.description.toLowerCase().includes(searchTerm.toLowerCase())) {
+        return false;
+      }
+      
+      return true;
+    });
   
   if (authLoading || logsLoading) {
     return (
@@ -82,22 +103,38 @@ export default function ActivityLog() {
               <CardDescription>Track your actions across the application</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid grid-cols-5 md:w-fit">
-                  <TabsTrigger value="all">All</TabsTrigger>
-                  <TabsTrigger value="transaction">Transactions</TabsTrigger>
-                  <TabsTrigger value="investment">Investments</TabsTrigger>
-                  <TabsTrigger value="budget">Budgets</TabsTrigger>
-                  <TabsTrigger value="login">Logins</TabsTrigger>
-                </TabsList>
-              </Tabs>
+              <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+                <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full sm:w-auto">
+                  <TabsList className="grid grid-cols-3 sm:grid-cols-6">
+                    <TabsTrigger value="all">All</TabsTrigger>
+                    <TabsTrigger value="transaction">Transactions</TabsTrigger>
+                    <TabsTrigger value="investment">Investments</TabsTrigger>
+                    <TabsTrigger value="budget">Budgets</TabsTrigger>
+                    <TabsTrigger value="login">Logins</TabsTrigger>
+                    <TabsTrigger value="banking">Banking</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Search activities..."
+                    className="w-full pl-8"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
               
               {filteredLogs.length === 0 ? (
                 <div className="py-10 text-center">
                   <Activity className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium mb-2">No Activity Yet</h3>
+                  <h3 className="text-lg font-medium mb-2">No Activity Found</h3>
                   <p className="text-muted-foreground mb-4 max-w-md mx-auto">
-                    As you use the app, your activities will appear here.
+                    {searchTerm || activeTab !== "all"
+                      ? "Try adjusting your search or filters"
+                      : "As you use the app, your activities will appear here."}
                   </p>
                 </div>
               ) : (

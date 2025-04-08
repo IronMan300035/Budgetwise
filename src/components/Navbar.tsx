@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
@@ -36,7 +35,7 @@ export default function Navbar() {
   const navigation = [
     { name: "Dashboard", href: "/dashboard", requiresAuth: true },
     { name: "Budgets", href: "/budget", requiresAuth: true },
-    { name: "Transactions", href: "/transactions", requiresAuth: true },
+    { name: "Financial Activities", href: "/financial-activities", requiresAuth: true },
     { name: "Investments", href: "/investment", requiresAuth: true },
     { name: "Feedback", href: "/feedback", requiresAuth: false }
   ];
@@ -47,7 +46,7 @@ export default function Navbar() {
   
   const isInDashboard = location.pathname.includes("/dashboard") || 
                         location.pathname.includes("/budget") || 
-                        location.pathname.includes("/transactions") || 
+                        location.pathname.includes("/financial-activities") || 
                         location.pathname.includes("/investment") || 
                         location.pathname.includes("/profile") || 
                         location.pathname.includes("/settings") || 
@@ -123,6 +122,9 @@ export default function Navbar() {
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to="/settings">Settings</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/bank-accounts">Link Bank Account</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to="/logout" className="text-red-500 flex items-center">
@@ -201,6 +203,13 @@ export default function Navbar() {
                       className="block px-3 py-2 rounded-md text-base font-medium text-foreground/70 hover:bg-accent/50 hover:text-foreground"
                     >
                       Settings
+                    </Link>
+                    <Link
+                      to="/bank-accounts"
+                      onClick={toggleMenu}
+                      className="block px-3 py-2 rounded-md text-base font-medium text-foreground/70 hover:bg-accent/50 hover:text-foreground"
+                    >
+                      Link Bank Account
                     </Link>
                     <Link
                       to="/logout"

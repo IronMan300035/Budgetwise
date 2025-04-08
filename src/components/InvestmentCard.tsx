@@ -13,6 +13,10 @@ interface InvestmentCardProps {
   risk: string;
   minInvestment: string;
   onClick: () => void;
+  analyticsButton?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 export const InvestmentCard: React.FC<InvestmentCardProps> = ({
@@ -23,7 +27,8 @@ export const InvestmentCard: React.FC<InvestmentCardProps> = ({
   returns,
   risk,
   minInvestment,
-  onClick
+  onClick,
+  analyticsButton
 }) => {
   return (
     <Card className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-all">
@@ -53,14 +58,28 @@ export const InvestmentCard: React.FC<InvestmentCardProps> = ({
               <div className="font-medium">{minInvestment}</div>
             </div>
           </div>
-          <Button 
-            onClick={onClick}
-            className="w-full flex justify-between"
-            style={{ backgroundColor: color }}
-          >
-            <span>Invest Now</span>
-            <ArrowRight className="h-4 w-4" />
-          </Button>
+          
+          <div className="flex flex-col sm:flex-row gap-2">
+            {analyticsButton && (
+              <Button 
+                onClick={analyticsButton.onClick}
+                variant="outline"
+                className="flex justify-between"
+              >
+                <span>{analyticsButton.label}</span>
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            )}
+            
+            <Button 
+              onClick={onClick}
+              className="flex justify-between"
+              style={{ backgroundColor: color }}
+            >
+              <span>Invest Now</span>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </Card>

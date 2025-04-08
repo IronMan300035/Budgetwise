@@ -28,6 +28,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
+import { ChevronRight } from "lucide-react";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -425,12 +427,15 @@ export default function Dashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>Recent Transactions</CardTitle>
+                <h3 className="text-lg font-medium">Recent Transactions</h3>
                 <CardDescription>Your latest financial activities</CardDescription>
               </div>
-              <Button variant="outline" size="sm" onClick={() => navigate("/transactions")}>
-                View All <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
+              <Link 
+                to="/financial-activities" 
+                className="text-sm text-primary hover:underline flex items-center"
+              >
+                View All <ChevronRight className="ml-1 h-4 w-4" />
+              </Link>
             </CardHeader>
             <CardContent>
               {recentTransactions.length === 0 ? (
