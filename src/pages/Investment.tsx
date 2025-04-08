@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -38,13 +37,17 @@ export default function Investment() {
   const { user, loading: authLoading } = useAuth();
   const { investments, loading, addInvestment, getInvestmentTotal, getInvestmentsByType } = useInvestments();
   const { addActivityLog } = useActivityLogs();
+  
+  type InvestmentType = 'sip' | 'stock' | 'mutual_fund' | 'crypto' | 'fd' | 'rd' | 'other';
+  
   const [newInvestment, setNewInvestment] = useState({
-    type: "stock" as const,
+    type: "stock" as InvestmentType,
     name: "",
     amount: "",
     purchase_date: new Date().toISOString().split("T")[0],
     notes: ""
   });
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   useEffect(() => {
@@ -83,7 +86,7 @@ export default function Investment() {
         );
         
         setNewInvestment({
-          type: "stock" as const,
+          type: "stock" as InvestmentType,
           name: "",
           amount: "",
           purchase_date: new Date().toISOString().split("T")[0],
@@ -102,13 +105,11 @@ export default function Investment() {
   const investmentTotal = getInvestmentTotal();
   const investmentsByType = getInvestmentsByType();
   
-  // Convert the investmentsByType object to an array for the pie chart
   const pieChartData = Object.entries(investmentsByType).map(([type, amount]) => ({
     name: type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' '),
     value: amount
   }));
   
-  // Colors for the pie chart
   const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE', '#00C49F'];
   
   if (authLoading || loading) {
@@ -153,7 +154,7 @@ export default function Investment() {
                         value={newInvestment.type}
                         onChange={(e) => setNewInvestment(prev => ({
                           ...prev,
-                          type: e.target.value as 'stock' | 'mutual_fund' | 'sip' | 'crypto' | 'fd' | 'rd' | 'other'
+                          type: e.target.value as InvestmentType
                         }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
                         required
@@ -225,7 +226,6 @@ export default function Investment() {
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            {/* Summary Cards */}
             <Card className="shadow-md">
               <CardHeader className="pb-2">
                 <div className="flex items-center space-x-2">
@@ -299,22 +299,18 @@ export default function Investment() {
             </Card>
           </div>
           
-          {/* Investment Tracker */}
           <div className="mb-8">
             <InvestmentTracker />
           </div>
           
-          {/* Investment Options */}
           <div className="mb-8">
             <InvestmentOptions />
           </div>
           
-          {/* Bank Account Linking */}
           <div id="bank-account-section" className="mb-8">
             <BankAccountLink />
           </div>
           
-          {/* Current Investments */}
           <Card className="shadow-md mb-8">
             <CardHeader>
               <CardTitle>Your Investments</CardTitle>
