@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
 
 export default function Logout() {
-  const { logout } = useAuth();
+  const { signOut } = useAuth(); // Changed from logout to signOut
   const navigate = useNavigate();
   const { addActivityLog } = useActivityLogs();
 
@@ -17,7 +17,7 @@ export default function Logout() {
         await addActivityLog("logout", "User logged out");
         
         // Then perform the logout
-        await logout();
+        await signOut(); // Changed from logout to signOut
         
         toast.success("Successfully logged out");
       } catch (error) {
@@ -30,7 +30,7 @@ export default function Logout() {
     };
 
     performLogout();
-  }, [logout, navigate, addActivityLog]);
+  }, [signOut, navigate, addActivityLog]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">

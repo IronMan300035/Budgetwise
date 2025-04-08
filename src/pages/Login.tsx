@@ -15,7 +15,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { signIn } = useAuth(); // Changed from login to signIn
   const navigate = useNavigate();
   const { addActivityLog } = useActivityLogs();
 
@@ -30,7 +30,7 @@ export default function Login() {
     setLoading(true);
     
     try {
-      await login(email, password);
+      await signIn(email, password); // Changed from login to signIn
       
       // Log the login activity
       addActivityLog("login", "User logged in");
