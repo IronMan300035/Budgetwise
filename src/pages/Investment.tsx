@@ -28,7 +28,7 @@ import {
   Plus, 
   Landmark,
   BadgeDollarSign,
-  GoldCoin
+  Coins
 } from "lucide-react";
 import { toast } from "sonner";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
@@ -39,7 +39,7 @@ export default function Investment() {
   const { investments, loading, addInvestment, getInvestmentTotal, getInvestmentsByType } = useInvestments();
   const { addActivityLog } = useActivityLogs();
   const [newInvestment, setNewInvestment] = useState({
-    type: "stock",
+    type: "stock" as const,
     name: "",
     amount: "",
     purchase_date: new Date().toISOString().split("T")[0],
@@ -72,6 +72,7 @@ export default function Investment() {
     try {
       const result = await addInvestment({
         ...newInvestment,
+        type: newInvestment.type,
         amount: parseFloat(newInvestment.amount)
       });
       
@@ -82,7 +83,7 @@ export default function Investment() {
         );
         
         setNewInvestment({
-          type: "stock",
+          type: "stock" as const,
           name: "",
           amount: "",
           purchase_date: new Date().toISOString().split("T")[0],
@@ -150,7 +151,10 @@ export default function Investment() {
                         id="type"
                         name="type"
                         value={newInvestment.type}
-                        onChange={handleInputChange}
+                        onChange={(e) => setNewInvestment(prev => ({
+                          ...prev,
+                          type: e.target.value as 'stock' | 'mutual_fund' | 'sip' | 'crypto' | 'fd' | 'rd' | 'other'
+                        }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
                         required
                       >

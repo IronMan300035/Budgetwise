@@ -10,8 +10,7 @@ import {
   BarChart4, 
   Landmark, 
   BadgeDollarSign, 
-  GoldCoin, 
-  CoinsIcon, 
+  Coins as CoinsIcon, 
   CircleDollarSign,
   Wallet,
   Building
@@ -24,7 +23,7 @@ interface InvestmentOption {
   id: string;
   title: string;
   description: string;
-  icon: React.ComponentType;
+  icon: React.ComponentType<any>;
   color: string;
   returns: string;
   risk: string;
@@ -163,7 +162,7 @@ export const InvestmentOptions = () => {
       id: 'crypto-2',
       title: 'Ethereum',
       description: 'Programmable blockchain with smart contract functionality',
-      icon: GoldCoin,
+      icon: BadgeDollarSign,
       color: '#8B5CF6',
       returns: 'Variable',
       risk: 'Very High',

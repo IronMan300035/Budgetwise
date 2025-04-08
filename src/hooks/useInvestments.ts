@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 export interface Investment {
   id: string;
   user_id: string;
-  type: 'sip' | 'stock' | 'mutual_fund' | 'crypto' | 'other';
+  type: 'sip' | 'stock' | 'mutual_fund' | 'crypto' | 'fd' | 'rd' | 'other';
   name: string;
   amount: number;
   quantity?: number;

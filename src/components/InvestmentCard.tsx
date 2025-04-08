@@ -2,12 +2,12 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LucideIcon, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 interface InvestmentCardProps {
   title: string;
   description: string;
-  icon: LucideIcon;
+  icon: React.ComponentType<any>;
   color: string;
   returns: string;
   risk: string;
