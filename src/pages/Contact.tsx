@@ -74,7 +74,8 @@ export default function Contact() {
                   </div>
                   <div>
                     <h3 className="font-medium">Phone</h3>
-                    <p className="text-muted-foreground">+1 (555) 123-4567</p>
+                    <p className="text-muted-foreground">+91 8527278310</p>
+                    <p className="text-muted-foreground">+91 8447379189</p>
                   </div>
                 </div>
                 
@@ -85,9 +86,8 @@ export default function Contact() {
                   <div>
                     <h3 className="font-medium">Office</h3>
                     <p className="text-muted-foreground">
-                      123 Finance Street<br />
-                      San Francisco, CA 94103<br />
-                      United States
+                      Delhi, India - 110034<br />
+                      India
                     </p>
                   </div>
                 </div>

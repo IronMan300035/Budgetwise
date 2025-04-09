@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/context/AuthContext";
-import { useCollaboration } from "@/context/CollaborationContext";
+import { useCollaboration } from "@/hooks/useCollaborationProvider";
+import { EmailInviteForm } from "@/components/EmailInviteForm";
 import {
   Card,
   CardContent,
@@ -40,7 +40,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Users, 
   UserPlus, 
@@ -79,8 +78,6 @@ export default function Collaborations() {
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState<"viewer" | "editor" | "admin">("viewer");
   const [selectedCollaboration, setSelectedCollaboration] = useState<any>(null);
   
   useEffect(() => {
@@ -119,18 +116,14 @@ export default function Collaborations() {
     }
   };
   
-  const handleInviteCollaborator = async () => {
-    if (!selectedCollaboration || !email) {
-      toast.error("Please enter an email address");
-      return;
+  const handleInviteCollaborator = async (email: string, role: 'viewer' | 'editor' | 'admin') => {
+    if (!selectedCollaboration) {
+      toast.error("No collaboration selected");
+      return false;
     }
     
     const result = await inviteCollaborator(selectedCollaboration.id, email, role);
-    if (result) {
-      setEmail("");
-      setRole("viewer");
-      setIsInviteOpen(false);
-    }
+    return result;
   };
   
   const handleOpenEdit = (collaboration: any) => {
@@ -439,36 +432,13 @@ export default function Collaborations() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="colleague@example.com"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="role">Role</Label>
-              <Select value={role} onValueChange={(value: any) => setRole(value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="viewer">Viewer (can only view)</SelectItem>
-                  <SelectItem value="editor">Editor (can edit but not invite)</SelectItem>
-                  <SelectItem value="admin">Admin (full access)</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground mt-1">
-                Admins can invite others and manage the collaboration. Editors can make changes but can't invite. Viewers can only view.
-              </p>
-            </div>
+            <EmailInviteForm 
+              onInvite={handleInviteCollaborator} 
+              disabled={false}
+            />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsInviteOpen(false)}>Cancel</Button>
-            <Button onClick={handleInviteCollaborator}>Send Invitation</Button>
+            <Button variant="outline" onClick={() => setIsInviteOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -492,7 +462,7 @@ export default function Collaborations() {
             
             <div className="pt-4">
               <h3 className="text-sm font-medium mb-3">Share via</h3>
-              <div className="flex space-x-2">
+              <div className="flex flex-wrap gap-2">
                 <Button variant="outline" size="sm" onClick={() => socialShare("email")}>
                   <Mail className="h-4 w-4 mr-1" />
                   Email
