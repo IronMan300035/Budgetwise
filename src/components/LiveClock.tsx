@@ -22,7 +22,7 @@ export function LiveClock() {
   });
   
   return (
-    <div className="flex items-center gap-1.5 text-sm font-medium">
+    <div className="flex items-center gap-1.5 text-sm font-medium bg-background/80 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm border">
       <Clock className="h-4 w-4" />
       <span>{formattedTime}</span>
     </div>

@@ -4,8 +4,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
-import { Briefcase, TrendingUp, LineChart, ArrowUpRight } from "lucide-react";
+import { 
+  Briefcase, 
+  TrendingUp, 
+  LineChart, 
+  ArrowUpRight, 
+  XCircle 
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useInvestments } from "@/hooks/useInvestments";
+import { MarketTrendGraph } from "@/components/MarketTrendGraph";
+import { toast } from "sonner";
 
 interface StockRecommendation {
   name: string;
@@ -17,7 +27,7 @@ interface StockRecommendation {
   recommendation: string;
 }
 
-// Stock recommendations based on different budget ranges
+// Enhanced stock recommendations with more options
 const stockRecommendationsByBudget: Record<string, StockRecommendation[]> = {
   "lowBudget": [
     { 
@@ -46,6 +56,24 @@ const stockRecommendationsByBudget: Record<string, StockRecommendation[]> = {
       risk: "Medium",
       growth: "Moderate",
       recommendation: "World's largest two-wheeler manufacturer with strong Indian market."
+    },
+    { 
+      name: "WIPRO",
+      fullName: "Wipro Ltd",
+      sector: "IT Services",
+      price: 420,
+      risk: "Low",
+      growth: "Stable",
+      recommendation: "Global IT consulting and business process services company."
+    },
+    { 
+      name: "SUNPHARMA",
+      fullName: "Sun Pharmaceutical Industries Ltd",
+      sector: "Pharmaceutical",
+      price: 490,
+      risk: "Medium",
+      growth: "Good",
+      recommendation: "India's largest pharmaceutical company with global presence."
     }
   ],
   "mediumBudget": [
@@ -75,6 +103,24 @@ const stockRecommendationsByBudget: Record<string, StockRecommendation[]> = {
       risk: "Low",
       growth: "Good",
       recommendation: "India's leading private sector bank with strong fundamentals."
+    },
+    { 
+      name: "ICICIBANK",
+      fullName: "ICICI Bank Ltd",
+      sector: "Banking",
+      price: 980,
+      risk: "Low",
+      growth: "Good",
+      recommendation: "Second-largest private sector bank in India with diversified business."
+    },
+    { 
+      name: "HINDALCO",
+      fullName: "Hindalco Industries Ltd",
+      sector: "Metals & Mining",
+      price: 550,
+      risk: "Medium",
+      growth: "Cyclical",
+      recommendation: "One of the largest aluminum manufacturers with global operations."
     }
   ],
   "highBudget": [
@@ -104,6 +150,24 @@ const stockRecommendationsByBudget: Record<string, StockRecommendation[]> = {
       risk: "Medium",
       growth: "Moderate",
       recommendation: "India's largest passenger car manufacturer with strong market share."
+    },
+    { 
+      name: "TITAN",
+      fullName: "Titan Company Ltd",
+      sector: "Consumer",
+      price: 3200,
+      risk: "Medium",
+      growth: "Good",
+      recommendation: "Leading jewellery retailer with diversified product portfolio."
+    },
+    { 
+      name: "LTI",
+      fullName: "Larsen & Toubro Infotech Ltd",
+      sector: "IT Services",
+      price: 5800,
+      risk: "Medium",
+      growth: "High",
+      recommendation: "Fast-growing IT services company with strong enterprise solutions."
     }
   ]
 };
@@ -119,6 +183,9 @@ export function StockRecommendations() {
   const [recommendationSet, setRecommendationSet] = useState<StockRecommendation[]>(
     stockRecommendationsByBudget.mediumBudget
   );
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  const [selectedStock, setSelectedStock] = useState<StockRecommendation | null>(null);
+  const { addInvestment } = useInvestments();
 
   // Update recommendations based on investment amount
   const updateRecommendations = (amount: number) => {
@@ -130,6 +197,34 @@ export function StockRecommendations() {
       setRecommendationSet(stockRecommendationsByBudget.mediumBudget);
     } else {
       setRecommendationSet(stockRecommendationsByBudget.highBudget);
+    }
+  };
+
+  const handleViewAnalysis = (stock: StockRecommendation) => {
+    setSelectedStock(stock);
+    setShowAnalysis(true);
+  };
+
+  const handleInvest = async (stock: StockRecommendation) => {
+    const quantity = Math.floor(investmentAmount / stock.price);
+    
+    try {
+      const result = await addInvestment({
+        type: 'stock',
+        name: stock.fullName,
+        symbol: stock.name,
+        amount: stock.price * quantity,
+        quantity: quantity,
+        purchase_date: new Date().toISOString().split('T')[0],
+        notes: `Investment in ${stock.sector} sector. ${stock.recommendation}`
+      });
+
+      if (result) {
+        toast.success(`Successfully invested in ${stock.name}`);
+      }
+    } catch (error) {
+      console.error("Error investing:", error);
+      toast.error("Failed to process investment");
     }
   };
 
@@ -196,11 +291,20 @@ export function StockRecommendations() {
               </div>
               <p className="text-sm mt-2">{stock.recommendation}</p>
               <div className="mt-3 flex justify-end">
-                <Button variant="outline" size="sm" className="text-blue-600">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-blue-600"
+                  onClick={() => handleViewAnalysis(stock)}
+                >
                   <LineChart className="h-3.5 w-3.5 mr-1" />
                   View Analysis
                 </Button>
-                <Button size="sm" className="ml-2 bg-blue-600 hover:bg-blue-700">
+                <Button 
+                  size="sm" 
+                  className="ml-2 bg-blue-600 hover:bg-blue-700"
+                  onClick={() => handleInvest(stock)}
+                >
                   <ArrowUpRight className="h-3.5 w-3.5 mr-1" />
                   Invest Now
                 </Button>
@@ -208,6 +312,85 @@ export function StockRecommendations() {
             </div>
           ))}
         </div>
+
+        {/* Stock Analysis Dialog */}
+        <Dialog open={showAnalysis} onOpenChange={setShowAnalysis}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <LineChart className="h-5 w-5 text-blue-600" />
+                {selectedStock?.name} - Market Analysis
+              </DialogTitle>
+              <DialogDescription>
+                Real-time market data and analysis for {selectedStock?.fullName}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="mt-4 space-y-4">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-lg font-semibold">{selectedStock?.fullName}</h3>
+                  <p className="text-sm text-muted-foreground">{selectedStock?.sector}</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold">₹{selectedStock?.price}</div>
+                  <div className="text-sm text-green-600 flex items-center">
+                    <TrendingUp className="h-4 w-4 mr-1" />
+                    +1.2% today
+                  </div>
+                </div>
+              </div>
+              
+              <div className="h-[400px] border rounded-lg p-4">
+                <MarketTrendGraph />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-sm">Market Cap</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-lg font-bold">₹{(selectedStock?.price ? selectedStock.price * 100000000 : 0).toLocaleString()}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-sm">P/E Ratio</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-lg font-bold">{(Math.random() * 30 + 10).toFixed(2)}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-sm">Dividend Yield</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-lg font-bold">{(Math.random() * 5).toFixed(2)}%</p>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div className="flex justify-end mt-6">
+                <Button variant="outline" onClick={() => setShowAnalysis(false)} className="mr-2">
+                  <XCircle className="h-4 w-4 mr-1" />
+                  Close
+                </Button>
+                <Button 
+                  className="bg-blue-600 hover:bg-blue-700"
+                  onClick={() => {
+                    handleInvest(selectedStock!);
+                    setShowAnalysis(false);
+                  }}
+                >
+                  <ArrowUpRight className="h-4 w-4 mr-1" />
+                  Invest Now
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );

@@ -1,7 +1,10 @@
+
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "@/components/ui/button";
+import { LiveClock } from "@/components/LiveClock";
+import { LiveWeather } from "@/components/LiveWeather";
 import { 
   CircleDollarSign,
   ChevronDown,
@@ -14,7 +17,9 @@ import {
   Settings,
   Activity,
   LogOut,
-  MessageSquare
+  MessageSquare,
+  Newspaper,
+  Users
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -37,6 +42,8 @@ export default function Navbar() {
     { name: "Budgets", href: "/budget", requiresAuth: true },
     { name: "Financial Activities", href: "/financial-activities", requiresAuth: true },
     { name: "Investments", href: "/investment", requiresAuth: true },
+    { name: "News Bulletin", href: "/news-bulletin", requiresAuth: false },
+    { name: "Companion Mode", href: "/collaborations", requiresAuth: true },
     { name: "Feedback", href: "/feedback", requiresAuth: false }
   ];
   
@@ -67,6 +74,12 @@ export default function Navbar() {
               <CircleDollarSign className="h-6 w-6 text-primary" />
               <span className="font-bold text-xl">BudgetWise</span>
             </Link>
+          </div>
+
+          {/* Weather and Clock Widget */}
+          <div className="hidden md:flex items-center space-x-2 absolute left-1/2 top-3 transform -translate-x-1/2">
+            <LiveWeather />
+            <LiveClock />
           </div>
 
           {/* Desktop Navigation */}
@@ -145,6 +158,12 @@ export default function Navbar() {
               {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           </div>
+        </div>
+        
+        {/* Mobile Weather and Clock Widget */}
+        <div className="md:hidden flex items-center space-x-2 justify-center my-2">
+          <LiveWeather />
+          <LiveClock />
         </div>
       </div>
 
