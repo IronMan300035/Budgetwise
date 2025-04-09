@@ -87,7 +87,7 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
         allCollaborations.map(async (collab) => {
           const { data: collaborators, error: collabError } = await supabase
             .from('collaborators')
-            .select('id, user_id, role, status, created_at, profiles:user_id(email)')
+            .select('id, user_id, role, status, created_at, profiles!inner(email)')
             .eq('collaboration_id', collab.id);
 
           if (collabError) {
@@ -120,7 +120,7 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const createCollaboration = async (name: string, description?: string) => {
+  const createCollaboration = async (name: string, description?: string): Promise<Collaboration | null> => {
     if (!user) return null;
 
     try {
@@ -141,7 +141,7 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       // Add the new collaboration to state
-      const newCollaboration = {
+      const newCollaboration: Collaboration = {
         ...data[0],
         collaborators: []
       };
@@ -372,7 +372,7 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [user]);
 
-  const value = {
+  const value: CollaborationContextType = {
     collaborations,
     loading,
     createCollaboration,

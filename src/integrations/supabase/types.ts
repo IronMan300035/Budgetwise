@@ -63,6 +63,65 @@ export type Database = {
         }
         Relationships: []
       }
+      collaborations: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          owner_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          owner_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          owner_id?: string
+        }
+        Relationships: []
+      }
+      collaborators: {
+        Row: {
+          collaboration_id: string
+          created_at: string
+          id: string
+          role: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          collaboration_id: string
+          created_at?: string
+          id?: string
+          role: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          collaboration_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaborators_collaboration_id_fkey"
+            columns: ["collaboration_id"]
+            isOneToOne: false
+            referencedRelation: "collaborations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedback: {
         Row: {
           created_at: string
