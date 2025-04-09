@@ -351,10 +351,10 @@ export default function Dashboard() {
             </CardContent>
           </Card>
           
-          <Card className={`bg-gradient-to-br ${
+          <Card className={`${
             financialSummary.balance >= 0 
-              ? "from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-900/50" 
-              : "from-red-50 to-rose-100 dark:from-red-900/20 dark:to-rose-900/20 border-red-200 dark:border-red-900/50"
+              ? "bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-900/50" 
+              : "bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-900/20 dark:to-rose-900/20 border-red-200 dark:border-red-900/50"
           }`}>
             <CardHeader className="pb-2">
               <CardTitle className={`text-base font-medium ${
