@@ -85,9 +85,10 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
       // For each collaboration, fetch its collaborators
       const collaborationsWithMembers = await Promise.all(
         allCollaborations.map(async (collab) => {
-          const { data: collaborators, error: collabError } = await supabase
+          // First fetch collaborator data
+          const { data: collaboratorsData, error: collabError } = await supabase
             .from('collaborators')
-            .select('id, user_id, role, status, created_at, profiles(email)')
+            .select('id, user_id, role, status, created_at')
             .eq('collaboration_id', collab.id);
 
           if (collabError) {
@@ -98,15 +99,37 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
             };
           }
 
+          // Then for each collaborator, fetch the corresponding profile to get email
+          const collaboratorsWithProfiles = await Promise.all((collaboratorsData || []).map(async (collaborator) => {
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .select('email')
+              .eq('id', collaborator.user_id)
+              .single();
+              
+            if (profileError) {
+              console.error('Error fetching profile:', profileError);
+              return {
+                id: collaborator.id,
+                email: 'Unknown',
+                role: collaborator.role,
+                status: collaborator.status,
+                created_at: collaborator.created_at
+              };
+            }
+            
+            return {
+              id: collaborator.id,
+              email: profileData?.email || 'Unknown',
+              role: collaborator.role,
+              status: collaborator.status,
+              created_at: collaborator.created_at
+            };
+          }));
+
           return {
             ...collab,
-            collaborators: (collaborators || []).map(c => ({
-              id: c.id,
-              email: c.profiles?.email || 'Unknown',
-              role: c.role,
-              status: c.status,
-              created_at: c.created_at
-            }))
+            collaborators: collaboratorsWithProfiles
           };
         })
       );
