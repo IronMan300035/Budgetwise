@@ -35,10 +35,10 @@ import Collaborations from "@/pages/Collaborations";
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-      <AuthProvider>
-        <CollaborationProvider>
-          <BrowserRouter>
+    <ThemeProvider defaultTheme="system">
+      <BrowserRouter>
+        <AuthProvider>
+          <CollaborationProvider>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
@@ -69,9 +69,9 @@ function App() {
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster position="bottom-right" />
-          </BrowserRouter>
-        </CollaborationProvider>
-      </AuthProvider>
+          </CollaborationProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </ThemeProvider>
   );
 }
