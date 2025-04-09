@@ -87,7 +87,7 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
         allCollaborations.map(async (collab) => {
           const { data: collaborators, error: collabError } = await supabase
             .from('collaborators')
-            .select('id, user_id, role, status, created_at, profiles!inner(email)')
+            .select('id, user_id, role, status, created_at, profiles(email)')
             .eq('collaboration_id', collab.id);
 
           if (collabError) {
