@@ -22,7 +22,8 @@ import {
   CheckCircle2, 
   Lock, 
   Shield, 
-  KeyRound
+  KeyRound,
+  ExternalLink
 } from "lucide-react";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
 
@@ -33,6 +34,7 @@ export default function BankAccounts() {
   const [linkedBanks, setLinkedBanks] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("netbanking");
   const { addActivityLog } = useActivityLogs();
+  const [showManualForm, setShowManualForm] = useState(false);
   
   const form = useForm({
     defaultValues: {
@@ -40,7 +42,20 @@ export default function BankAccounts() {
       accountNumber: "",
       username: "",
       password: "",
+      ifsc: "",
+      accountType: "",
+      holderName: ""
     },
+  });
+  
+  const manualForm = useForm({
+    defaultValues: {
+      bankName: "",
+      accountNumber: "",
+      ifsc: "",
+      holderName: "",
+      accountType: "Savings"
+    }
   });
   
   const handleSubmit = async (data: any) => {
@@ -71,48 +86,90 @@ export default function BankAccounts() {
       setIsLinking(false);
     }
   };
-  
-  const banks = [
-    { id: "hdfc", name: "HDFC Bank" },
-    { id: "sbi", name: "State Bank of India" },
-    { id: "icici", name: "ICICI Bank" },
-    { id: "axis", name: "Axis Bank" },
-    { id: "kotak", name: "Kotak Mahindra Bank" },
-    { id: "pnb", name: "Punjab National Bank" },
-    { id: "bob", name: "Bank of Baroda" },
-    { id: "yes", name: "Yes Bank" },
-    { id: "federal", name: "Federal Bank" },
-    { id: "idfc", name: "IDFC First Bank" },
-  ];
-  
-  const handleNetBankingLink = () => {
+
+  const handleManualSubmit = async (data: any) => {
     setIsLinking(true);
     
-    // Simulate linking process
-    setTimeout(() => {
-      const selectedBank = form.getValues("bank");
-      const bankName = banks.find(b => b.id === selectedBank)?.name || selectedBank;
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      setLinkedBanks(prev => [...prev, bankName]);
+      // Add to linked banks
+      setLinkedBanks(prev => [...prev, data.bankName]);
       
       // Log the activity
       if (user) {
-        addActivityLog('banking', `Linked ${bankName} via Net Banking`);
+        addActivityLog('banking', `Manually added ${data.bankName} bank account`);
       }
       
-      toast.success("Bank account linked successfully!", {
-        description: "Your net banking account has been successfully linked.",
+      toast.success("Bank account added successfully!", {
+        description: "Your bank account has been successfully added to your profile.",
+      });
+      
+      manualForm.reset();
+      setShowManualForm(false);
+    } catch (error) {
+      toast.error("Failed to add bank account", {
+        description: "Please try again or contact support if the issue persists.",
+      });
+    } finally {
+      setIsLinking(false);
+    }
+  };
+  
+  const banks = [
+    { id: "hdfc", name: "HDFC Bank", website: "https://netbanking.hdfcbank.com/" },
+    { id: "sbi", name: "State Bank of India", website: "https://retail.onlinesbi.sbi/retail/login.htm" },
+    { id: "icici", name: "ICICI Bank", website: "https://infinity.icicibank.com/" },
+    { id: "axis", name: "Axis Bank", website: "https://retail.axisbank.co.in/" },
+    { id: "kotak", name: "Kotak Mahindra Bank", website: "https://netbanking.kotak.com/" },
+    { id: "pnb", name: "Punjab National Bank", website: "https://netpnb.com/" },
+    { id: "bob", name: "Bank of Baroda", website: "https://www.bobibanking.com/" },
+    { id: "yes", name: "Yes Bank", website: "https://www.yesbank.in/personal-banking/yes-online" },
+    { id: "federal", name: "Federal Bank", website: "https://www.fednetbank.com/" },
+    { id: "idfc", name: "IDFC First Bank", website: "https://my.idfcfirstbank.com/" },
+  ];
+  
+  const handleNetBankingLink = () => {
+    const selectedBank = form.getValues("bank");
+    if (!selectedBank) {
+      toast.error("Please select a bank");
+      return;
+    }
+    
+    const bank = banks.find(b => b.id === selectedBank);
+    if (bank && bank.website) {
+      // Open bank website in a new tab
+      window.open(bank.website, "_blank");
+      
+      // Also add to linked banks
+      setLinkedBanks(prev => [...prev, bank.name]);
+      
+      // Log the activity
+      if (user) {
+        addActivityLog('banking', `Initiated net banking with ${bank.name}`);
+      }
+      
+      toast.success("Redirecting to bank website", {
+        description: "Please complete authentication on your bank's website.",
       });
       
       form.reset();
-      setIsLinking(false);
-    }, 2000);
+    }
   };
   
   if (!user) {
     navigate("/login");
     return null;
   }
+  
+  const accountTypes = [
+    { id: "savings", name: "Savings Account" },
+    { id: "current", name: "Current Account" },
+    { id: "salary", name: "Salary Account" },
+    { id: "fixed", name: "Fixed Deposit" },
+    { id: "recurring", name: "Recurring Deposit" },
+  ];
   
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
@@ -135,9 +192,10 @@ export default function BankAccounts() {
                 </CardHeader>
                 <CardContent>
                   <Tabs defaultValue="netbanking" value={activeTab} onValueChange={setActiveTab}>
-                    <TabsList className="grid w-full grid-cols-2">
+                    <TabsList className="grid w-full grid-cols-3">
                       <TabsTrigger value="netbanking">Net Banking</TabsTrigger>
                       <TabsTrigger value="accountdetails">Account Details</TabsTrigger>
+                      <TabsTrigger value="manual">Manual Entry</TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="netbanking" className="space-y-4 pt-4">
@@ -174,10 +232,10 @@ export default function BankAccounts() {
                           <div className="flex items-center justify-between pt-4">
                             <div className="flex items-center text-sm text-muted-foreground">
                               <Lock className="h-4 w-4 mr-1" />
-                              <span>Your credentials are secure and encrypted</span>
+                              <span>You will be redirected to your bank's website</span>
                             </div>
                             <Button type="submit" disabled={isLinking}>
-                              {isLinking ? "Linking..." : "Connect to Bank"}
+                              {isLinking ? "Redirecting..." : "Connect to Bank"} <ExternalLink className="ml-1 h-4 w-4" />
                             </Button>
                           </div>
                         </form>
@@ -281,6 +339,103 @@ export default function BankAccounts() {
                             </div>
                             <Button type="submit" disabled={isLinking}>
                               {isLinking ? "Linking..." : "Link Account"}
+                            </Button>
+                          </div>
+                        </form>
+                      </Form>
+                    </TabsContent>
+                    
+                    <TabsContent value="manual" className="space-y-4 pt-4">
+                      <Form {...manualForm}>
+                        <form onSubmit={manualForm.handleSubmit(handleManualSubmit)} className="space-y-4">
+                          <FormField
+                            control={manualForm.control}
+                            name="bankName"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Bank Name</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Enter bank name" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                              control={manualForm.control}
+                              name="accountNumber"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Account Number</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Enter account number" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={manualForm.control}
+                              name="ifsc"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>IFSC Code</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Enter IFSC code" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                              control={manualForm.control}
+                              name="holderName"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Account Holder Name</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Enter account holder name" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={manualForm.control}
+                              name="accountType"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Account Type</FormLabel>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select account type" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {accountTypes.map((type) => (
+                                        <SelectItem key={type.id} value={type.id}>
+                                          {type.name}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          
+                          <div className="flex items-center justify-end pt-4">
+                            <Button type="submit" disabled={isLinking}>
+                              {isLinking ? "Adding..." : "Add Account Manually"}
                             </Button>
                           </div>
                         </form>

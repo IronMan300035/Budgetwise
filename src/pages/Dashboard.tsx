@@ -351,9 +351,19 @@ export default function Dashboard() {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-900/50">
+          <Card className={`bg-gradient-to-br ${
+            financialSummary.balance >= 0 
+              ? "from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-900/50" 
+              : "from-red-50 to-rose-100 dark:from-red-900/20 dark:to-rose-900/20 border-red-200 dark:border-red-900/50"
+          }`}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base font-medium text-blue-800 dark:text-blue-300">Net Balance</CardTitle>
+              <CardTitle className={`text-base font-medium ${
+                financialSummary.balance >= 0 
+                  ? "text-blue-800 dark:text-blue-300"
+                  : "text-red-800 dark:text-red-300"
+              }`}>
+                Net Balance {financialSummary.balance < 0 && "(Negative)"}
+              </CardTitle>
               {balanceChange !== 0 && (
                 <div className={`text-xs flex items-center ${balanceChange > 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {balanceChange > 0 ? <ArrowUpRight className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
@@ -363,12 +373,24 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col">
-                <div className="text-2xl font-bold text-blue-800 dark:text-blue-200 mb-1">
-                  ₹{financialSummary.balance.toLocaleString()}
+                <div className={`text-2xl font-bold mb-1 ${
+                  financialSummary.balance >= 0 
+                    ? "text-blue-800 dark:text-blue-200"
+                    : "text-red-800 dark:text-red-200"
+                }`}>
+                  {financialSummary.balance < 0 ? '-' : ''}₹{Math.abs(financialSummary.balance).toLocaleString()}
                 </div>
                 <div className="flex justify-between items-center mt-2">
-                  <div className="h-10 w-10 rounded-full bg-blue-200 dark:bg-blue-800 flex items-center justify-center">
-                    <Wallet className="h-5 w-5 text-blue-700 dark:text-blue-300" />
+                  <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                    financialSummary.balance >= 0 
+                      ? "bg-blue-200 dark:bg-blue-800" 
+                      : "bg-red-200 dark:bg-red-800"
+                  }`}>
+                    <Wallet className={`h-5 w-5 ${
+                      financialSummary.balance >= 0 
+                        ? "text-blue-700 dark:text-blue-300" 
+                        : "text-red-700 dark:text-red-300"
+                    }`} />
                   </div>
                   <div className="text-xs text-muted-foreground">
                     <span className="block">Net worth: ₹{netWorth.toLocaleString()}</span>

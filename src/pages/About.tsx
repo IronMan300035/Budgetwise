@@ -6,25 +6,25 @@ import { Card, CardContent } from "@/components/ui/card";
 export default function About() {
   const team = [
     {
-      name: "Alex Johnson",
+      name: "Ankit Paul",
       role: "CEO & Founder",
       bio: "Previously led fintech initiatives at major banks. Passionate about democratizing financial tools for everyone.",
       image: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
     },
     {
-      name: "Sarah Chen",
-      role: "CTO",
+      name: "Tejas Juneja",
+      role: "CEO & Founder",
       bio: "Software engineer with expertise in AI and financial systems. Dedicated to building secure and scalable fintech solutions.",
-      image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
-    },
-    {
-      name: "Marcus Williams",
-      role: "Chief Financial Officer",
-      bio: "Former investment banker with 15+ years of experience in personal finance and wealth management.",
       image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
     },
     {
-      name: "Priya Patel",
+      name: "Dr. Pankaj Aggarwal",
+      role: "Mentor",
+      bio: "Former investment banker with 15+ years of experience in personal finance and wealth management.",
+      image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
+    },
+    {
+      name: "Ms. Kriti Sharma",
       role: "Head of Product",
       bio: "User experience specialist focused on creating intuitive financial tools that anyone can use.",
       image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
