@@ -18,7 +18,9 @@ interface NewsCardProps {
 export function NewsCard({ title, summary, imageUrl, source, date, category, url }: NewsCardProps) {
   const handleReadMore = () => {
     // Open the news article in a new tab
-    window.open(url, '_blank', 'noopener,noreferrer');
+    if (url && url !== '#') {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
   };
 
   return (
