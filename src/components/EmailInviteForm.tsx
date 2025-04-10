@@ -12,7 +12,6 @@ import {
 import { Label } from '@/components/ui/label';
 import { SendHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 
 interface EmailInviteFormProps {
   onInvite: (email: string, role: 'viewer' | 'editor' | 'admin') => Promise<boolean>;
