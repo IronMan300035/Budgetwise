@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { PlusCircle, Minus, UserPlus, DollarSign, Euro, PoundSterling, CircleYen, UserRound, RotateCcw, Share2 } from "lucide-react";
+import { PlusCircle, Minus, UserPlus, DollarSign, Euro, PoundSterling, Yen, UserRound, RotateCcw, Share2 } from "lucide-react";
 import { 
   Dialog,
   DialogContent,
