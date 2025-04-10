@@ -1,9 +1,9 @@
+
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { LiveClock } from "@/components/LiveClock";
-import { LiveWeather } from "@/components/LiveWeather";
 import { 
   CircleDollarSign,
   ChevronDown,
@@ -18,7 +18,11 @@ import {
   LogOut,
   MessageSquare,
   Newspaper,
-  Bell
+  Bell,
+  BarChart3,
+  FileSpreadsheet,
+  FileLineChart,
+  Split
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -45,12 +49,15 @@ export default function Navbar() {
   const toggleMenu = () => setIsOpen(!isOpen);
   
   const navigation = [
-    { name: "Dashboard", href: "/dashboard", requiresAuth: true },
-    { name: "Budgets", href: "/budget", requiresAuth: true },
-    { name: "Financial Activities", href: "/financial-activities", requiresAuth: true },
-    { name: "Investments", href: "/investment", requiresAuth: true },
-    { name: "News Bulletin", href: "/news-bulletin", requiresAuth: false },
-    { name: "Feedback", href: "/feedback", requiresAuth: false }
+    { name: "Dashboard", href: "/dashboard", requiresAuth: true, icon: <BarChart3 className="h-4 w-4 mr-2" /> },
+    { name: "Budgets", href: "/budget", requiresAuth: true, icon: <PieChart className="h-4 w-4 mr-2" /> },
+    { name: "Budget Diary", href: "/budget-diary", requiresAuth: true, icon: <FileSpreadsheet className="h-4 w-4 mr-2" /> },
+    { name: "Financial Activities", href: "/financial-activities", requiresAuth: true, icon: <LineChart className="h-4 w-4 mr-2" /> },
+    { name: "Transactions", href: "/transactions", requiresAuth: true, icon: <Wallet className="h-4 w-4 mr-2" /> },
+    { name: "Investments", href: "/investment", requiresAuth: true, icon: <Landmark className="h-4 w-4 mr-2" /> },
+    { name: "Splitwise", href: "/splitwise", requiresAuth: true, icon: <Split className="h-4 w-4 mr-2" /> },
+    { name: "News Bulletin", href: "/news-bulletin", requiresAuth: false, icon: <Newspaper className="h-4 w-4 mr-2" /> },
+    { name: "Assistant", href: "/assistant", requiresAuth: false, icon: <MessageSquare className="h-4 w-4 mr-2" /> }
   ];
   
   const isActive = (path: string) => {
@@ -93,12 +100,13 @@ export default function Navbar() {
                       key={item.name}
                       to={item.href}
                       className={cn(
-                        "px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                        "px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center",
                         isActive(item.href)
                           ? "bg-primary/10 text-primary"
                           : "text-foreground/70 hover:bg-accent/50 hover:text-foreground"
                       )}
                     >
+                      {item.icon}
                       {item.name}
                     </Link>
                   )
@@ -158,6 +166,8 @@ export default function Navbar() {
                 {showCurrencyToggle && <ThemeToggle />}
                 {!showCurrencyToggle && <ThemeToggle />}
                 
+                <LiveClock />
+                
                 {shouldShowAuthButtons ? (
                   <div className="flex items-center space-x-2">
                     <Button asChild variant="ghost" size="sm">
@@ -179,6 +189,9 @@ export default function Navbar() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
                         <Link to="/profile">Profile</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/profile#feedback">Feedback</Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link to="/activity-log">Activity Log</Link>
@@ -251,8 +264,8 @@ export default function Navbar() {
                   </PopoverContent>
                 </Popover>
               )}
-              {showCurrencyToggle && <ThemeToggle />}
-              {!showCurrencyToggle && <ThemeToggle />}
+              <ThemeToggle />
+              <LiveClock />
               <Button variant="ghost" size="icon" onClick={toggleMenu}>
                 {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
@@ -282,12 +295,13 @@ export default function Navbar() {
                         to={item.href}
                         onClick={toggleMenu}
                         className={cn(
-                          "block px-3 py-2 rounded-md text-base font-medium",
+                          "flex items-center px-3 py-2 rounded-md text-base font-medium",
                           isActive(item.href)
                             ? "bg-primary/10 text-primary"
                             : "text-foreground/70 hover:bg-accent/50 hover:text-foreground"
                         )}
                       >
+                        {item.icon}
                         {item.name}
                       </Link>
                     )
@@ -298,35 +312,42 @@ export default function Navbar() {
                       <Link
                         to="/profile"
                         onClick={toggleMenu}
-                        className="block px-3 py-2 rounded-md text-base font-medium text-foreground/70 hover:bg-accent/50 hover:text-foreground"
+                        className="flex items-center px-3 py-2 rounded-md text-base font-medium text-foreground/70 hover:bg-accent/50 hover:text-foreground"
                       >
                         Profile
                       </Link>
                       <Link
+                        to="/profile#feedback"
+                        onClick={toggleMenu}
+                        className="flex items-center px-3 py-2 rounded-md text-base font-medium text-foreground/70 hover:bg-accent/50 hover:text-foreground"
+                      >
+                        Feedback
+                      </Link>
+                      <Link
                         to="/activity-log"
                         onClick={toggleMenu}
-                        className="block px-3 py-2 rounded-md text-base font-medium text-foreground/70 hover:bg-accent/50 hover:text-foreground"
+                        className="flex items-center px-3 py-2 rounded-md text-base font-medium text-foreground/70 hover:bg-accent/50 hover:text-foreground"
                       >
                         Activity Log
                       </Link>
                       <Link
                         to="/settings"
                         onClick={toggleMenu}
-                        className="block px-3 py-2 rounded-md text-base font-medium text-foreground/70 hover:bg-accent/50 hover:text-foreground"
+                        className="flex items-center px-3 py-2 rounded-md text-base font-medium text-foreground/70 hover:bg-accent/50 hover:text-foreground"
                       >
                         Settings
                       </Link>
                       <Link
                         to="/bank-accounts"
                         onClick={toggleMenu}
-                        className="block px-3 py-2 rounded-md text-base font-medium text-foreground/70 hover:bg-accent/50 hover:text-foreground"
+                        className="flex items-center px-3 py-2 rounded-md text-base font-medium text-foreground/70 hover:bg-accent/50 hover:text-foreground"
                       >
                         Link Bank Account
                       </Link>
                       <Link
                         to="/logout"
                         onClick={toggleMenu}
-                        className="block px-3 py-2 rounded-md text-base font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center"
+                        className="flex items-center px-3 py-2 rounded-md text-base font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
                       >
                         <LogOut className="h-4 w-4 mr-2" /> Logout
                       </Link>
@@ -339,10 +360,9 @@ export default function Navbar() {
         )}
       </nav>
       
-      {/* Weather and Clock Widget moved below navbar */}
+      {/* Clock moved to navbar, weather component removed */}
       <div className="container mx-auto px-4 py-2 flex flex-wrap justify-center md:justify-end items-center gap-2">
-        <LiveWeather />
-        <LiveClock />
+        {/* LiveWeather component removed as requested */}
       </div>
     </>
   );

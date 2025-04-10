@@ -20,7 +20,6 @@ import BankAccounts from "@/pages/BankAccounts";
 import Logout from "@/pages/Logout";
 import VerifyEmail from "@/pages/VerifyEmail";
 import VerifyPhone from "@/pages/VerifyPhone";
-import Feedback from "@/pages/Feedback";
 import Features from "@/pages/Features";
 import Pricing from "@/pages/Pricing";
 import Assistant from "@/pages/Assistant";
@@ -29,6 +28,8 @@ import Contact from "@/pages/Contact";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
 import NewsBulletin from "@/pages/NewsBulletin";
+import Splitwise from "@/pages/Splitwise";
+import BudgetDiary from "@/pages/BudgetDiary";
 import { VoiceCommandSystem } from "@/components/VoiceCommandSystem";
 
 function App() {
@@ -53,7 +54,6 @@ function App() {
             <Route path="/logout" element={<Logout />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/verify-phone" element={<VerifyPhone />} />
-            <Route path="/feedback" element={<Feedback />} />
             <Route path="/features" element={<Features />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/assistant" element={<Assistant />} />
@@ -62,6 +62,8 @@ function App() {
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/news-bulletin" element={<NewsBulletin />} />
+            <Route path="/splitwise" element={<Splitwise />} />
+            <Route path="/budget-diary" element={<BudgetDiary />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster position="bottom-right" />
