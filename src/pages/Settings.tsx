@@ -1,356 +1,386 @@
-
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/context/AuthContext";
-import { useProfiles } from "@/hooks/useProfiles";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { useTheme } from "@/providers/ThemeProvider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CurrencyToggle } from "@/components/CurrencyToggle";
-import { 
-  Settings as SettingsIcon, 
-  Bell, 
-  Shield, 
-  Database, 
-  Moon, 
-  Trash2, 
-  CircleDollarSign,
-  Globe,
-  Languages,
-  Lock
-} from "lucide-react";
-import { toast } from "sonner";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Sun, Moon, Laptop, CircleDashed, User, Key, Bell, Layout, CircleDollarSign, MessageSquare, Settings as SettingsIcon, ListChecks, Newspaper, Split, TrendingUp, Receipt, PieChart } from "lucide-react";
+import { VirtualKeyboardToggle } from "@/components/VirtualKeyboardToggle";
 
 export default function Settings() {
   const navigate = useNavigate();
-  const { user, loading: authLoading, signOut } = useAuth();
-  const { profile, loading: profileLoading } = useProfiles();
-  const [notifications, setNotifications] = useState({
-    email: true,
-    push: false,
-    budgetAlerts: true,
-    marketUpdates: false,
-    tips: true
-  });
-
-  const [privacy, setPrivacy] = useState({
-    shareData: false,
-    analytics: true
-  });
-
-  // Check authentication
-  React.useEffect(() => {
+  const { user, loading: authLoading } = useAuth();
+  const { theme, setTheme } = useTheme();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPasswordChanging, setIsPasswordChanging] = useState(false);
+  
+  useEffect(() => {
     if (!authLoading && !user) {
       navigate("/login");
+    } else if (user) {
+      setFirstName(user.firstName || "");
+      setLastName(user.lastName || "");
+      setEmail(user.email || "");
     }
   }, [authLoading, user, navigate]);
-
-  const handleSaveNotifications = () => {
-    toast.success("Notification preferences saved");
+  
+  const tabs = [
+    { label: "General", value: "general", icon: <User className="h-4 w-4" /> },
+    { label: "Security", value: "security", icon: <Key className="h-4 w-4" /> },
+    { label: "Notifications", value: "notifications", icon: <Bell className="h-4 w-4" /> },
+    { label: "Preferences", value: "preferences", icon: <Layout className="h-4 w-4" /> },
+    { label: "Currency", value: "currency", icon: <CircleDollarSign className="h-4 w-4" /> },
+    { label: "Feedback", value: "feedback", icon: <MessageSquare className="h-4 w-4" /> },
+  ];
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+    setIsSubmitting(false);
+    alert("Settings saved!");
   };
-
-  const handleSavePrivacy = () => {
-    toast.success("Privacy settings saved");
+  
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsPasswordChanging(true);
+    
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+    setIsPasswordChanging(false);
+    alert("Password changed!");
   };
-
-  const handleResetData = () => {
-    // This would typically show a confirmation dialog
-    toast.error("This action cannot be undone", {
-      description: "Please contact support if you need to reset your account data",
-      duration: 5000,
-    });
-  };
-
-  if (authLoading || profileLoading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-        <p className="mt-4 text-lg">Loading settings...</p>
-      </div>
-    );
-  }
-
+  
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
       <Navbar />
       
-      <main className="flex-1 py-8 px-4 md:px-8">
-        <div className="container mx-auto max-w-5xl">
-          <h1 className="text-3xl font-bold mb-6 bg-gradient-to-r from-primary to-blue-600 text-transparent bg-clip-text">Settings</h1>
+      <main className="flex-1">
+        <div className="container mx-auto py-8 px-4">
+          <h1 className="text-3xl font-bold mb-6">Settings</h1>
           
-          <Tabs defaultValue="appearance" className="space-y-6">
-            <TabsList className="grid w-full max-w-md grid-cols-3">
-              <TabsTrigger value="appearance">Appearance</TabsTrigger>
-              <TabsTrigger value="notifications">Notifications</TabsTrigger>
-              <TabsTrigger value="security">Security & Privacy</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="appearance" className="space-y-6">
-              <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Moon className="h-5 w-5" /> Theme & Display
-                  </CardTitle>
-                  <CardDescription>Customize how BudgetWise looks</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-medium">Dark Mode</h4>
-                        <p className="text-sm text-muted-foreground">Enable dark mode for the application</p>
-                      </div>
-                      <div>
-                        <Button variant="outline" size="sm">
-                          System Default
+          <div className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-6">
+            <Card className="h-fit">
+              <CardContent className="p-0">
+                <Tabs defaultValue="general" orientation="vertical" className="w-full">
+                  <TabsList className="flex flex-col h-auto w-full items-start justify-start rounded-none border-r p-0">
+                    {tabs.map((tab) => (
+                      <TabsTrigger
+                        key={tab.value}
+                        value={tab.value}
+                        className="w-full justify-start rounded-none py-3 px-4 data-[state=active]:bg-muted"
+                      >
+                        {tab.icon}
+                        <span className="ml-2">{tab.label}</span>
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                  
+                  <TabsContent value="general" className="border-0 p-0">
+                    <Card className="border-0 shadow-none">
+                      <CardHeader>
+                        <CardTitle>General Information</CardTitle>
+                        <CardDescription>
+                          Update your profile information and manage your account settings
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div className="space-y-2">
+                          <Label htmlFor="firstName">First Name</Label>
+                          <Input 
+                            id="firstName" 
+                            placeholder="Enter your first name" 
+                            value={firstName}
+                            onChange={(e) => setFirstName(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="lastName">Last Name</Label>
+                          <Input 
+                            id="lastName" 
+                            placeholder="Enter your last name"
+                            value={lastName}
+                            onChange={(e) => setLastName(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="email">Email</Label>
+                          <Input 
+                            id="email" 
+                            placeholder="Enter your email" 
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            disabled
+                          />
+                        </div>
+                        <Button onClick={handleSubmit} disabled={isSubmitting}>
+                          {isSubmitting ? "Saving..." : "Save Changes"}
                         </Button>
-                      </div>
-                    </div>
-                    
-                    <div className="border-t pt-4">
-                      <h4 className="font-medium mb-4">Currency Display</h4>
-                      <div className="flex items-center justify-between">
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  
+                  <TabsContent value="security" className="border-0 p-0">
+                    <Card className="border-0 shadow-none">
+                      <CardHeader>
+                        <CardTitle>Security Settings</CardTitle>
+                        <CardDescription>
+                          Manage your password and secure your account
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div className="space-y-2">
+                          <Label htmlFor="currentPassword">Current Password</Label>
+                          <Input 
+                            id="currentPassword" 
+                            placeholder="Enter your current password" 
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="newPassword">New Password</Label>
+                          <Input 
+                            id="newPassword" 
+                            placeholder="Enter your new password" 
+                            type="password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                          <Input 
+                            id="confirmPassword" 
+                            placeholder="Confirm your new password" 
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                          />
+                        </div>
+                        <Button onClick={handleChangePassword} disabled={isPasswordChanging}>
+                          {isPasswordChanging ? "Changing..." : "Change Password"}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  
+                  <TabsContent value="notifications" className="border-0 p-0">
+                    <Card className="border-0 shadow-none">
+                      <CardHeader>
+                        <CardTitle>Notification Settings</CardTitle>
+                        <CardDescription>
+                          Manage your notification preferences
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
                         <div>
-                          <p className="text-sm text-muted-foreground">Set your preferred currency</p>
+                          <p>Notification settings will be implemented here.</p>
                         </div>
-                        <CurrencyToggle />
-                      </div>
-                    </div>
-                    
-                    <div className="border-t pt-4">
-                      <h4 className="font-medium mb-4">Language</h4>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <Globe className="h-4 w-4 mr-2 text-muted-foreground" />
-                          <p className="text-sm text-muted-foreground">Choose your preferred language</p>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  
+                  <TabsContent value="preferences" className="border-0 p-0">
+                    <Card className="border-0 shadow-none">
+                      <CardHeader>
+                        <CardTitle>Preferences</CardTitle>
+                        <CardDescription>
+                          Customize your app experience and visual preferences
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div className="space-y-2">
+                          <Label htmlFor="theme">Theme</Label>
+                          <div className="grid grid-cols-3 gap-2">
+                            <Button 
+                              variant={theme === 'light' ? 'default' : 'outline'} 
+                              className="justify-start"
+                              onClick={() => setTheme('light')}
+                            >
+                              <Sun className="mr-2 h-4 w-4" />
+                              Light
+                            </Button>
+                            <Button 
+                              variant={theme === 'dark' ? 'default' : 'outline'} 
+                              className="justify-start"
+                              onClick={() => setTheme('dark')}
+                            >
+                              <Moon className="mr-2 h-4 w-4" />
+                              Dark
+                            </Button>
+                            <Button 
+                              variant={theme === 'classic-dark' ? 'default' : 'outline'} 
+                              className="justify-start"
+                              onClick={() => setTheme('classic-dark')}
+                            >
+                              <CircleDashed className="mr-2 h-4 w-4" />
+                              Classic Dark
+                            </Button>
+                            <Button 
+                              variant={theme === 'system' ? 'default' : 'outline'} 
+                              className="justify-start"
+                              onClick={() => setTheme('system')}
+                            >
+                              <Laptop className="mr-2 h-4 w-4" />
+                              System
+                            </Button>
+                          </div>
                         </div>
-                        <Button variant="outline" size="sm">English (US)</Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Database className="h-5 w-5" /> Data Display Preferences
-                  </CardTitle>
-                  <CardDescription>Control how your data is displayed</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Show Running Balance</h4>
-                      <p className="text-sm text-muted-foreground">Display running balance in transaction history</p>
-                    </div>
-                    <Switch checked={true} />
-                  </div>
+                        
+                        <Separator />
+                        
+                        <div className="space-y-2">
+                          <Label>Virtual Keyboard</Label>
+                          <VirtualKeyboardToggle />
+                        </div>
+                        
+                        <Separator />
+                        
+                        <div className="space-y-2">
+                          <Label>Language</Label>
+                          <Select defaultValue="en-IN">
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select language" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="en-IN">English (India)</SelectItem>
+                              <SelectItem value="hi-IN">Hindi</SelectItem>
+                              <SelectItem value="en-US">English (US)</SelectItem>
+                              <SelectItem value="en-GB">English (UK)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <p className="text-sm text-muted-foreground">
+                            This will change the language throughout the application
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
                   
-                  <div className="flex items-center justify-between border-t pt-4">
-                    <div>
-                      <h4 className="font-medium">Default Dashboard View</h4>
-                      <p className="text-sm text-muted-foreground">Choose your default dashboard view</p>
-                    </div>
-                    <Button variant="outline" size="sm">Monthly Overview</Button>
-                  </div>
+                  <TabsContent value="currency" className="border-0 p-0">
+                    <Card className="border-0 shadow-none">
+                      <CardHeader>
+                        <CardTitle>Currency Settings</CardTitle>
+                        <CardDescription>
+                          Manage your currency preferences
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div>
+                          <p>Currency settings will be implemented here.</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
                   
-                  <div className="flex items-center justify-between border-t pt-4">
-                    <div>
-                      <h4 className="font-medium">Default Date Range</h4>
-                      <p className="text-sm text-muted-foreground">Set the default date range for reports</p>
-                    </div>
-                    <Button variant="outline" size="sm">Last 30 Days</Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                  <TabsContent value="feedback" className="border-0 p-0">
+                    <Card className="border-0 shadow-none">
+                      <CardHeader>
+                        <CardTitle>Feedback</CardTitle>
+                        <CardDescription>
+                          Share your feedback with us
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div>
+                          <p>Feedback form will be implemented here.</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
             
-            <TabsContent value="notifications" className="space-y-6">
-              <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Bell className="h-5 w-5" /> Notification Settings
-                  </CardTitle>
-                  <CardDescription>Control how you receive notifications</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Email Notifications</h4>
-                      <p className="text-sm text-muted-foreground">Receive updates via email</p>
-                    </div>
-                    <Switch 
-                      checked={notifications.email} 
-                      onCheckedChange={(checked) => setNotifications({...notifications, email: checked})}
-                    />
+            <Card className="h-fit">
+              <CardHeader>
+                <CardTitle>Profile</CardTitle>
+                <CardDescription>
+                  View your profile information and manage your account settings
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col items-center justify-center space-y-4">
+                  <Avatar className="h-24 w-24">
+                    <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${firstName || 'U'}`} alt={firstName || "User"} />
+                    <AvatarFallback>{firstName?.charAt(0) || "U"}</AvatarFallback>
+                  </Avatar>
+                  <div className="text-center">
+                    <div className="text-lg font-semibold">{firstName} {lastName}</div>
+                    <div className="text-sm text-muted-foreground">{email}</div>
                   </div>
-                  
-                  <div className="flex items-center justify-between border-t pt-4">
-                    <div>
-                      <h4 className="font-medium">Push Notifications</h4>
-                      <p className="text-sm text-muted-foreground">Receive notifications in the browser</p>
-                    </div>
-                    <Switch 
-                      checked={notifications.push} 
-                      onCheckedChange={(checked) => setNotifications({...notifications, push: checked})}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between border-t pt-4">
-                    <div>
-                      <h4 className="font-medium">Budget Alerts</h4>
-                      <p className="text-sm text-muted-foreground">Get notified when you're close to exceeding budget limits</p>
-                    </div>
-                    <Switch 
-                      checked={notifications.budgetAlerts} 
-                      onCheckedChange={(checked) => setNotifications({...notifications, budgetAlerts: checked})}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between border-t pt-4">
-                    <div>
-                      <h4 className="font-medium">Market Updates</h4>
-                      <p className="text-sm text-muted-foreground">Receive updates on market changes for your investments</p>
-                    </div>
-                    <Switch 
-                      checked={notifications.marketUpdates} 
-                      onCheckedChange={(checked) => setNotifications({...notifications, marketUpdates: checked})}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between border-t pt-4">
-                    <div>
-                      <h4 className="font-medium">Tips & Recommendations</h4>
-                      <p className="text-sm text-muted-foreground">Get personalized financial tips</p>
-                    </div>
-                    <Switch 
-                      checked={notifications.tips} 
-                      onCheckedChange={(checked) => setNotifications({...notifications, tips: checked})}
-                    />
-                  </div>
-                  
-                  <div className="pt-4">
-                    <Button onClick={handleSaveNotifications}>Save Notification Preferences</Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="security" className="space-y-6">
-              <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Lock className="h-5 w-5" /> Security Settings
-                  </CardTitle>
-                  <CardDescription>Manage your account security</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Change Password</h4>
-                    <p className="text-sm text-muted-foreground mb-4">Update your password to keep your account secure</p>
-                    <div className="grid gap-4">
-                      <div className="grid grid-cols-1 gap-2">
-                        <Label htmlFor="current-password">Current Password</Label>
-                        <Input id="current-password" type="password" />
-                      </div>
-                      <div className="grid grid-cols-1 gap-2">
-                        <Label htmlFor="new-password">New Password</Label>
-                        <Input id="new-password" type="password" />
-                      </div>
-                      <div className="grid grid-cols-1 gap-2">
-                        <Label htmlFor="confirm-password">Confirm New Password</Label>
-                        <Input id="confirm-password" type="password" />
-                      </div>
-                      <Button className="w-full md:w-auto">Update Password</Button>
-                    </div>
-                  </div>
-                  
-                  <div className="border-t pt-4 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-medium">Two-Factor Authentication</h4>
-                        <p className="text-sm text-muted-foreground">Add an extra layer of security to your account</p>
-                      </div>
-                      <Button variant="outline">Set Up 2FA</Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Shield className="h-5 w-5" /> Privacy Settings
-                  </CardTitle>
-                  <CardDescription>Control your data privacy preferences</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Data Sharing</h4>
-                      <p className="text-sm text-muted-foreground">Allow anonymous data sharing for service improvement</p>
-                    </div>
-                    <Switch 
-                      checked={privacy.shareData} 
-                      onCheckedChange={(checked) => setPrivacy({...privacy, shareData: checked})}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between border-t pt-4">
-                    <div>
-                      <h4 className="font-medium">Analytics Cookies</h4>
-                      <p className="text-sm text-muted-foreground">Allow usage analytics to improve user experience</p>
-                    </div>
-                    <Switch 
-                      checked={privacy.analytics} 
-                      onCheckedChange={(checked) => setPrivacy({...privacy, analytics: checked})}
-                    />
-                  </div>
-                  
-                  <div className="pt-4">
-                    <Button onClick={handleSavePrivacy}>Save Privacy Settings</Button>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card className="border-red-200 dark:border-red-900 overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                <CardHeader className="text-red-600 dark:text-red-400">
-                  <CardTitle className="flex items-center gap-2">
-                    <Trash2 className="h-5 w-5" /> Account Data
-                  </CardTitle>
-                  <CardDescription className="text-red-500/70 dark:text-red-400/70">Danger zone</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Reset Account Data</h4>
-                      <p className="text-sm text-muted-foreground">Delete all your transactions, budgets, and investments</p>
-                    </div>
-                    <Button 
-                      variant="destructive" 
-                      onClick={handleResetData}
-                    >
-                      Reset Data
-                    </Button>
-                  </div>
-                  
-                  <div className="flex items-center justify-between border-t border-red-200/30 dark:border-red-900/30 pt-4">
-                    <div>
-                      <h4 className="font-medium">Delete Account</h4>
-                      <p className="text-sm text-muted-foreground">Permanently delete your account and all data</p>
-                    </div>
-                    <Button variant="destructive">Delete Account</Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline">
+                        Edit Profile
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem>
+                        <User className="mr-2 h-4 w-4" />
+                        <span>Profile</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <SettingsIcon className="mr-2 h-4 w-4" />
+                        <span>Settings</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <ListChecks className="mr-2 h-4 w-4" />
+                        <span>Activity Log</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Newspaper className="mr-2 h-4 w-4" />
+                        <span>News Bulletin</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Split className="mr-2 h-4 w-4" />
+                        <span>Split Expenses</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <TrendingUp className="mr-2 h-4 w-4" />
+                        <span>Investment</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Receipt className="mr-2 h-4 w-4" />
+                        <span>Transactions</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <PieChart className="mr-2 h-4 w-4" />
+                        <span>Budget</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
       
