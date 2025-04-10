@@ -567,7 +567,6 @@ export default function Splitwise() {
                     Share Group
                   </Button>
                 </CardContent>
-              </CardContent>
               </Card>
             )}
           </div>

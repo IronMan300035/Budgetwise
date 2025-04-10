@@ -102,8 +102,8 @@ export function AIChatbot() {
     'mutual fund': 'Mutual funds pool money from many investors to buy diversified securities, managed by professionals. They come in various types like equity, debt, or hybrid funds.',
     'cryptocurrency': 'Cryptocurrency is a volatile investment. Only invest what you can afford to lose, do thorough research, and consider it as a small portion of your portfolio.',
     'gold': 'Gold can be a hedge against inflation and economic uncertainty. Consider investing in gold ETFs, sovereign gold bonds, or digital gold for better liquidity and lower costs.',
-    'fixed deposit': 'Fixed deposits offer guaranteed returns but may not beat inflation. They're good for conservative investors prioritizing capital preservation over growth.',
-    'ppf': 'Public Provident Fund (PPF) offers tax-free returns with a 15-year lock-in period. It's a government-backed scheme ideal for long-term wealth creation and tax savings.'
+    'fixed deposit': 'Fixed deposits offer guaranteed returns but may not beat inflation. They are good for conservative investors prioritizing capital preservation over growth.',
+    'ppf': 'Public Provident Fund (PPF) offers tax-free returns with a 15-year lock-in period. It is a government-backed scheme ideal for long-term wealth creation and tax savings.'
   };
   
   const generateBotResponse = (userMessage: string) => {
