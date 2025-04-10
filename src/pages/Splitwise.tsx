@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -11,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { PlusCircle, Minus, UserPlus, DollarSign, Euro, PoundSterling, Yen, UserRound, RotateCcw, Share2 } from "lucide-react";
+import { PlusCircle, Minus, UserPlus, DollarSign, Euro, PoundSterling, CircleYen, UserRound, RotateCcw, Share2 } from "lucide-react";
 import { 
   Dialog,
   DialogContent,
@@ -22,8 +21,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { useProfiles } from "@/hooks/useProfiles";
 
-// For demonstration purposes - would come from your database
 const CURRENCIES = [
   { code: 'INR', symbol: '₹', name: 'Indian Rupee', rate: 1 },
   { code: 'USD', symbol: '$', name: 'US Dollar', rate: 0.012 },
@@ -64,6 +63,7 @@ interface ExpenseGroup {
 export default function Splitwise() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const { profile } = useProfiles();
   const [groups, setGroups] = useState<ExpenseGroup[]>([]);
   const [activeGroup, setActiveGroup] = useState<ExpenseGroup | null>(null);
   const [newGroupName, setNewGroupName] = useState("");
@@ -77,24 +77,21 @@ export default function Splitwise() {
   const [customSplits, setCustomSplits] = useState<Record<string, number>>({});
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
   
-  // Check authentication
   useEffect(() => {
     if (!authLoading && !user) {
       navigate("/login");
     }
   }, [authLoading, user, navigate]);
   
-  // Load sample data for demo purposes
   useEffect(() => {
     if (user) {
-      // This would typically be loaded from your database
       const sampleGroups: ExpenseGroup[] = [
         {
           id: "1",
           name: "Goa Trip",
           currency: "INR",
           participants: [
-            { id: "1", name: user.firstName || "You", email: user.email || "", paid: 5000, owes: 0 },
+            { id: "1", name: profile?.first_name || user.email?.split('@')[0] || "You", email: user.email || "", paid: 5000, owes: 0 },
             { id: "2", name: "Rahul", email: "rahul@example.com", paid: 3000, owes: 1000 },
             { id: "3", name: "Priya", email: "priya@example.com", paid: 0, owes: 2000 },
             { id: "4", name: "Amit", email: "amit@example.com", paid: 0, owes: 2000 }
@@ -119,7 +116,7 @@ export default function Splitwise() {
         setActiveGroup(sampleGroups[0]);
       }
     }
-  }, [user]);
+  }, [user, profile]);
   
   const createNewGroup = () => {
     if (!newGroupName.trim()) {
@@ -134,7 +131,7 @@ export default function Splitwise() {
       participants: [
         { 
           id: user?.id || "current-user", 
-          name: user?.firstName || "You", 
+          name: profile?.first_name || user?.email?.split('@')[0] || "You", 
           email: user?.email || "", 
           paid: 0, 
           owes: 0 
@@ -214,10 +211,8 @@ export default function Splitwise() {
         splitDetails[id] = splitAmount;
       });
     } else {
-      // Custom split - use the customSplits state
       splitDetails = customSplits;
       
-      // Validate custom splits
       const totalSplit = Object.values(customSplits).reduce((sum, val) => sum + val, 0);
       if (Math.abs(totalSplit - amount) > 0.01) {
         toast.error("Split amounts must add up to the total expense");
@@ -237,16 +232,13 @@ export default function Splitwise() {
       customSplits: expenseSplit === 'custom' ? customSplits : undefined
     };
     
-    // Update paid and owed amounts for participants
     const updatedParticipants = [...activeGroup.participants];
     
-    // Add the full amount to the payer
     const payerIndex = updatedParticipants.findIndex(p => p.id === expensePaidBy);
     if (payerIndex !== -1) {
       updatedParticipants[payerIndex].paid += amount;
     }
     
-    // Add owed amounts to each participant
     selectedParticipants.forEach(participantId => {
       if (participantId !== expensePaidBy) {
         const index = updatedParticipants.findIndex(p => p.id === participantId);
@@ -280,7 +272,6 @@ export default function Splitwise() {
   const handleSetExpenseAmount = (value: string) => {
     setExpenseAmount(value);
     
-    // If we have participants selected, update custom splits with equal amounts
     if (selectedParticipants.length > 0 && value) {
       const amount = parseFloat(value);
       if (!isNaN(amount)) {
@@ -307,7 +298,6 @@ export default function Splitwise() {
     
     setSelectedParticipants(newSelected);
     
-    // Update custom splits when participants change
     if (expenseAmount) {
       const amount = parseFloat(expenseAmount);
       if (!isNaN(amount) && newSelected.length > 0) {
@@ -350,9 +340,7 @@ export default function Splitwise() {
     
     if (!from || !to) return amount;
     
-    // Convert to INR first (our base currency)
     const inINR = amount / from.rate;
-    // Then convert from INR to target currency
     return inINR * to.rate;
   };
   
@@ -362,7 +350,6 @@ export default function Splitwise() {
     const settlements: {from: string, to: string, amount: number}[] = [];
     const participants = [...activeGroup.participants];
     
-    // Calculate net balance for each participant
     const balances = participants.map(p => {
       const totalPaid = p.paid;
       const totalOwed = p.owes;
@@ -375,24 +362,22 @@ export default function Splitwise() {
       };
     });
     
-    // Sort by balance (negative balances first - these people owe money)
     balances.sort((a, b) => a.balance - b.balance);
     
-    // Generate settlements
-    let i = 0; // index for people who owe money (negative balance)
-    let j = balances.length - 1; // index for people who are owed money (positive balance)
+    let i = 0;
+    let j = balances.length - 1;
     
     while (i < j) {
       const debtor = balances[i];
       const creditor = balances[j];
       
       if (Math.abs(debtor.balance) < 0.01) {
-        i++; // Skip people with zero balance
+        i++;
         continue;
       }
       
       if (Math.abs(creditor.balance) < 0.01) {
-        j--; // Skip people with zero balance
+        j--;
         continue;
       }
       
@@ -405,12 +390,10 @@ export default function Splitwise() {
           amount
         });
         
-        // Update balances
         debtor.balance += amount;
         creditor.balance -= amount;
       }
       
-      // Move to next person if balance is settled
       if (Math.abs(debtor.balance) < 0.01) i++;
       if (Math.abs(creditor.balance) < 0.01) j--;
     }
@@ -419,10 +402,22 @@ export default function Splitwise() {
   };
   
   const shareGroup = () => {
-    // In a real app, this would generate a shareable link
-    // For now, we'll just show a toast message
     navigator.clipboard.writeText(`BudgetWise - Join my expense group: ${activeGroup?.name}`);
     toast.success("Invitation link copied to clipboard");
+  };
+  
+  const handleAddFirstExpenseClick = () => {
+    const addButton = document.querySelector('[data-value="add"]');
+    if (addButton && addButton instanceof HTMLElement) {
+      addButton.click();
+    }
+  };
+  
+  const handleCreateFirstGroupClick = () => {
+    const createButton = document.querySelector('button:has(svg[data-lucide="PlusCircle"])');
+    if (createButton && createButton instanceof HTMLElement) {
+      createButton.click();
+    }
   };
   
   if (authLoading) {
@@ -622,7 +617,7 @@ export default function Splitwise() {
                         ) : (
                           <div className="text-center py-8">
                             <p className="text-muted-foreground mb-2">No expenses yet</p>
-                            <Button variant="outline" onClick={() => document.querySelector('[data-value="add"]')?.click()}>
+                            <Button variant="outline" onClick={handleAddFirstExpenseClick}>
                               Add your first expense
                             </Button>
                           </div>
@@ -822,9 +817,7 @@ export default function Splitwise() {
                   <p className="text-muted-foreground mb-6">
                     Create a group to start splitting expenses with friends, roommates or colleagues.
                   </p>
-                  <Button 
-                    onClick={() => document.querySelector('button:has(svg[data-lucide="PlusCircle"])')?.click()}
-                  >
+                  <Button onClick={handleCreateFirstGroupClick}>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Create Your First Group
                   </Button>

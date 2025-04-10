@@ -20,11 +20,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sun, Moon, Laptop, CircleDashed, User, Key, Bell, Layout, CircleDollarSign, MessageSquare, Settings as SettingsIcon, ListChecks, Newspaper, Split, TrendingUp, Receipt, PieChart } from "lucide-react";
 import { VirtualKeyboardToggle } from "@/components/VirtualKeyboardToggle";
+import { useProfiles } from "@/hooks/useProfiles";
 
 export default function Settings() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { profile, loading: profileLoading } = useProfiles();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -38,11 +40,13 @@ export default function Settings() {
     if (!authLoading && !user) {
       navigate("/login");
     } else if (user) {
-      setFirstName(user.firstName || "");
-      setLastName(user.lastName || "");
+      if (profile) {
+        setFirstName(profile.first_name || "");
+        setLastName(profile.last_name || "");
+      }
       setEmail(user.email || "");
     }
-  }, [authLoading, user, navigate]);
+  }, [authLoading, user, navigate, profile]);
   
   const tabs = [
     { label: "General", value: "general", icon: <User className="h-4 w-4" /> },
