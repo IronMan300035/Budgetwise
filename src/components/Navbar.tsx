@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
@@ -19,15 +18,7 @@ import {
   LogOut,
   MessageSquare,
   Newspaper,
-  Bell,
-  LayoutDashboard,
-  Receipt,
-  PieChart as PieChartIcon,
-  TrendingUp,
-  Newspaper as NewspaperIcon,
-  Split,
-  ListChecks,
-  PiggyBank
+  Bell
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -52,7 +43,6 @@ export default function Navbar() {
   const { user } = useAuth();
   
   const toggleMenu = () => setIsOpen(!isOpen);
-  const toggleMobileMenu = () => setIsOpen(!isOpen);
   
   const navigation = [
     { name: "Dashboard", href: "/dashboard", requiresAuth: true },
@@ -75,203 +65,202 @@ export default function Navbar() {
                         location.pathname.includes("/settings") || 
                         location.pathname.includes("/activity-log");
 
+  // Only show auth buttons on non-dashboard pages AND when not authenticated
   const shouldShowAuthButtons = !isInDashboard && !user;
   
+  // Only show currency toggle on non-dashboard pages
   const showCurrencyToggle = !isInDashboard;
   
-  const pathname = location.pathname;
-
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center">
-          <Link to="/" className="mr-6 flex items-center">
-            <PiggyBank className="h-6 w-6 text-primary mr-2" />
-            <span className="hidden font-bold sm:inline-block">BudgetWise</span>
-          </Link>
-          <div className="flex items-center">
-            <Button variant="ghost" size="icon" className="mr-2 md:hidden" onClick={toggleMobileMenu}>
-              <Menu className="h-6 w-6" />
-            </Button>
-          </div>
-          
-          <nav className="hidden flex-1 md:flex">
-            <ul className="flex items-center gap-6 text-sm">
-              {user && (
-                <>
-                  <li>
-                    <Link 
-                      to="/dashboard" 
-                      className={`flex items-center transition-colors hover:text-foreground/80 ${pathname === "/dashboard" ? "text-foreground font-medium" : "text-foreground/60"}`}
+      <nav className="bg-background/80 backdrop-blur-md sticky top-0 z-50 border-b">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center">
+              <Link to="/" className="flex items-center space-x-2">
+                <CircleDollarSign className="h-6 w-6 text-primary" />
+                <span className="font-bold text-xl">BudgetWise</span>
+              </Link>
+            </div>
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-4">
+              {/* Show navigation links only if authenticated */}
+              <div className="flex space-x-1">
+                {navigation.map((item) => (
+                  (!item.requiresAuth || (item.requiresAuth && user)) && (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      className={cn(
+                        "px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                        isActive(item.href)
+                          ? "bg-primary/10 text-primary"
+                          : "text-foreground/70 hover:bg-accent/50 hover:text-foreground"
+                      )}
                     >
-                      <LayoutDashboard className="w-4 h-4 mr-1" />
-                      Dashboard
+                      {item.name}
                     </Link>
-                  </li>
-                  <li>
-                    <Link 
-                      to="/transactions" 
-                      className={`flex items-center transition-colors hover:text-foreground/80 ${pathname === "/transactions" ? "text-foreground font-medium" : "text-foreground/60"}`}
-                    >
-                      <Receipt className="w-4 h-4 mr-1" />
-                      Transactions
-                    </Link>
-                  </li>
-                  <li>
-                    <Link 
-                      to="/budget" 
-                      className={`flex items-center transition-colors hover:text-foreground/80 ${pathname === "/budget" ? "text-foreground font-medium" : "text-foreground/60"}`}
-                    >
-                      <PieChartIcon className="w-4 h-4 mr-1" />
-                      Budget
-                    </Link>
-                  </li>
-                  <li>
-                    <Link 
-                      to="/investment" 
-                      className={`flex items-center transition-colors hover:text-foreground/80 ${pathname === "/investment" ? "text-foreground font-medium" : "text-foreground/60"}`}
-                    >
-                      <TrendingUp className="w-4 h-4 mr-1" />
-                      Investments
-                    </Link>
-                  </li>
-                  <li>
-                    <Link 
-                      to="/news-bulletin" 
-                      className={`flex items-center transition-colors hover:text-foreground/80 ${pathname === "/news-bulletin" ? "text-foreground font-medium" : "text-foreground/60"}`}
-                    >
-                      <NewspaperIcon className="w-4 h-4 mr-1" />
-                      News
-                    </Link>
-                  </li>
-                  <li>
-                    <Link 
-                      to="/splitwise" 
-                      className={`flex items-center transition-colors hover:text-foreground/80 ${pathname === "/splitwise" ? "text-foreground font-medium" : "text-foreground/60"}`}
-                    >
-                      <Split className="w-4 h-4 mr-1" />
-                      Split Expenses
-                    </Link>
-                  </li>
-                </>
-              )}
-              <li>
-                <Link 
-                  to="/features" 
-                  className={`flex items-center transition-colors hover:text-foreground/80 ${pathname === "/features" ? "text-foreground font-medium" : "text-foreground/60"}`}
-                >
-                  <ListChecks className="w-4 h-4 mr-1" />
-                  Features
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/pricing" 
-                  className={`flex items-center transition-colors hover:text-foreground/80 ${pathname === "/pricing" ? "text-foreground font-medium" : "text-foreground/60"}`}
-                >
-                  <CircleDollarSign className="w-4 h-4 mr-1" />
-                  Pricing
-                </Link>
-              </li>
-            </ul>
-          </nav>
-          
-          <div className="flex items-center space-x-2">
-            {user && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative">
-                    <Bell className="h-5 w-5" />
-                    <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80">
-                  <div className="space-y-4">
-                    <h3 className="font-medium text-lg">Notification Settings</h3>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="email-notify">Email Notifications</Label>
-                        <Switch id="email-notify" defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="push-notify">Push Notifications</Label>
-                        <Switch id="push-notify" defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="budget-alerts">Budget Alerts</Label>
-                        <Switch id="budget-alerts" defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="market-updates">Market Updates</Label>
-                        <Switch id="market-updates" defaultChecked />
-                      </div>
-                    </div>
-                    <div className="border-t pt-2">
-                      <h4 className="font-medium mb-2">Recent Notifications</h4>
-                      <div className="space-y-2 max-h-40 overflow-y-auto">
-                        <div className="text-sm p-2 bg-secondary rounded">
-                          <p className="font-medium">Budget Limit Alert</p>
-                          <p className="text-muted-foreground">You've reached 80% of your monthly food budget</p>
-                          <p className="text-xs text-muted-foreground mt-1">Just now</p>
-                        </div>
-                        <div className="text-sm p-2 bg-secondary rounded">
-                          <p className="font-medium">New Feature Available</p>
-                          <p className="text-muted-foreground">Try out our new AI-powered financial assistant</p>
-                          <p className="text-xs text-muted-foreground mt-1">2 hours ago</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
-            )}
-            
-            {showCurrencyToggle && <ThemeToggle />}
-            {!showCurrencyToggle && <ThemeToggle />}
-            
-            {shouldShowAuthButtons ? (
-              <div className="flex items-center space-x-2">
-                <Button asChild variant="ghost" size="sm">
-                  <Link to="/login">Log in</Link>
-                </Button>
-                <Button asChild size="sm">
-                  <Link to="/signup">Sign up</Link>
-                </Button>
+                  )
+                ))}
               </div>
-            ) : user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="flex items-center">
-                    <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-                      {user.email?.charAt(0).toUpperCase() || "U"}
+
+              <div className="flex items-center space-x-2 border-l ml-2 pl-2">
+                {user && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="icon" className="relative">
+                        <Bell className="h-5 w-5" />
+                        <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80">
+                      <div className="space-y-4">
+                        <h3 className="font-medium text-lg">Notification Settings</h3>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="email-notify">Email Notifications</Label>
+                            <Switch id="email-notify" defaultChecked />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="push-notify">Push Notifications</Label>
+                            <Switch id="push-notify" defaultChecked />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="budget-alerts">Budget Alerts</Label>
+                            <Switch id="budget-alerts" defaultChecked />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="market-updates">Market Updates</Label>
+                            <Switch id="market-updates" defaultChecked />
+                          </div>
+                        </div>
+                        <div className="border-t pt-2">
+                          <h4 className="font-medium mb-2">Recent Notifications</h4>
+                          <div className="space-y-2 max-h-40 overflow-y-auto">
+                            <div className="text-sm p-2 bg-secondary rounded">
+                              <p className="font-medium">Budget Limit Alert</p>
+                              <p className="text-muted-foreground">You've reached 80% of your monthly food budget</p>
+                              <p className="text-xs text-muted-foreground mt-1">Just now</p>
+                            </div>
+                            <div className="text-sm p-2 bg-secondary rounded">
+                              <p className="font-medium">New Feature Available</p>
+                              <p className="text-muted-foreground">Try out our new AI-powered financial assistant</p>
+                              <p className="text-xs text-muted-foreground mt-1">2 hours ago</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                )}
+                
+                {showCurrencyToggle && <ThemeToggle />}
+                {!showCurrencyToggle && <ThemeToggle />}
+                
+                {shouldShowAuthButtons ? (
+                  <div className="flex items-center space-x-2">
+                    <Button asChild variant="ghost" size="sm">
+                      <Link to="/login">Log in</Link>
+                    </Button>
+                    <Button asChild size="sm">
+                      <Link to="/signup">Sign up</Link>
+                    </Button>
+                  </div>
+                ) : user ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="flex items-center">
+                        <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                          {user.email?.charAt(0).toUpperCase() || "U"}
+                        </div>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem asChild>
+                        <Link to="/profile">Profile</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/activity-log">Activity Log</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/settings">Settings</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/bank-accounts">Link Bank Account</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to="/logout" className="text-red-500 flex items-center">
+                          <LogOut className="h-4 w-4 mr-2" /> Logout
+                        </Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : null}
+              </div>
+            </div>
+
+            {/* Mobile Navigation Toggle */}
+            <div className="md:hidden flex items-center space-x-2">
+              {user && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="relative">
+                      <Bell className="h-5 w-5" />
+                      <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80">
+                    <div className="space-y-4">
+                      <h3 className="font-medium text-lg">Notification Settings</h3>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="email-notify">Email Notifications</Label>
+                          <Switch id="email-notify" defaultChecked />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="push-notify">Push Notifications</Label>
+                          <Switch id="push-notify" defaultChecked />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="budget-alerts">Budget Alerts</Label>
+                          <Switch id="budget-alerts" defaultChecked />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="market-updates">Market Updates</Label>
+                          <Switch id="market-updates" defaultChecked />
+                        </div>
+                      </div>
+                      <div className="border-t pt-2">
+                        <h4 className="font-medium mb-2">Recent Notifications</h4>
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                          <div className="text-sm p-2 bg-secondary rounded">
+                            <p className="font-medium">Budget Limit Alert</p>
+                            <p className="text-muted-foreground">You've reached 80% of your monthly food budget</p>
+                            <p className="text-xs text-muted-foreground mt-1">Just now</p>
+                          </div>
+                          <div className="text-sm p-2 bg-secondary rounded">
+                            <p className="font-medium">New Feature Available</p>
+                            <p className="text-muted-foreground">Try out our new AI-powered financial assistant</p>
+                            <p className="text-xs text-muted-foreground mt-1">2 hours ago</p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem asChild>
-                    <Link to="/profile">Profile</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/activity-log">Activity Log</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/settings">Settings</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/bank-accounts">Link Bank Account</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to="/logout" className="text-red-500 flex items-center">
-                      <LogOut className="h-4 w-4 mr-2" /> Logout
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : null}
+                  </PopoverContent>
+                </Popover>
+              )}
+              {showCurrencyToggle && <ThemeToggle />}
+              {!showCurrencyToggle && <ThemeToggle />}
+              <Button variant="ghost" size="icon" onClick={toggleMenu}>
+                {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </Button>
+            </div>
           </div>
         </div>
-        
+
+        {/* Mobile Navigation Menu */}
         {isOpen && (
           <div className="md:hidden bg-background/95 backdrop-blur-md border-b">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
@@ -348,8 +337,9 @@ export default function Navbar() {
             </div>
           </div>
         )}
-      </header>
+      </nav>
       
+      {/* Weather and Clock Widget moved below navbar */}
       <div className="container mx-auto px-4 py-2 flex flex-wrap justify-center md:justify-end items-center gap-2">
         <LiveWeather />
         <LiveClock />

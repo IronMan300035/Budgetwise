@@ -29,9 +29,7 @@ import Contact from "@/pages/Contact";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
 import NewsBulletin from "@/pages/NewsBulletin";
-import Splitwise from "@/pages/Splitwise";
 import { VoiceCommandSystem } from "@/components/VoiceCommandSystem";
-import { AIChatbot } from "@/components/AIChatbot";
 
 function App() {
   return (
@@ -64,12 +62,10 @@ function App() {
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/news-bulletin" element={<NewsBulletin />} />
-            <Route path="/splitwise" element={<Splitwise />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster position="bottom-right" />
           <VoiceCommandSystem />
-          <AIChatbot />
         </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>

@@ -30,7 +30,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
-import { ExportDashboard } from "@/components/ExportDashboard";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -267,11 +266,6 @@ export default function Dashboard() {
             >
               <Plus className="h-4 w-4 mr-1" /> Add Expense
             </Button>
-            
-            <ExportDashboard 
-              transactions={transactions}
-              financialSummary={financialSummary}
-            />
             
             <AlertDialog>
               <AlertDialogTrigger asChild>
