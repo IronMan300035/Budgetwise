@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
-import { useTheme } from "next-themes";
-import { Moon, Sun, Laptop } from "lucide-react";
+import { useTheme } from "@/providers/ThemeProvider";
+import { Moon, Sun, Laptop, CircleDashed } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +31,8 @@ export function ThemeToggle() {
             <Sun className="h-5 w-5" />
           ) : theme === "dark" ? (
             <Moon className="h-5 w-5" />
+          ) : theme === "classic-dark" ? (
+            <CircleDashed className="h-5 w-5" />
           ) : (
             <Laptop className="h-5 w-5" />
           )}
@@ -45,6 +47,10 @@ export function ThemeToggle() {
         <DropdownMenuItem onClick={() => setTheme("dark")}>
           <Moon className="mr-2 h-4 w-4" />
           <span>Dark</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("classic-dark")}>
+          <CircleDashed className="mr-2 h-4 w-4" />
+          <span>Classic Dark</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme("system")}>
           <Laptop className="mr-2 h-4 w-4" />

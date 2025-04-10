@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
@@ -19,16 +18,24 @@ import {
   LogOut,
   MessageSquare,
   Newspaper,
-  Users
+  Bell
 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
+import { 
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -43,7 +50,6 @@ export default function Navbar() {
     { name: "Financial Activities", href: "/financial-activities", requiresAuth: true },
     { name: "Investments", href: "/investment", requiresAuth: true },
     { name: "News Bulletin", href: "/news-bulletin", requiresAuth: false },
-    { name: "Companion Mode", href: "/collaborations", requiresAuth: true },
     { name: "Feedback", href: "/feedback", requiresAuth: false }
   ];
   
@@ -100,6 +106,55 @@ export default function Navbar() {
               </div>
 
               <div className="flex items-center space-x-2 border-l ml-2 pl-2">
+                {user && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="icon" className="relative">
+                        <Bell className="h-5 w-5" />
+                        <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80">
+                      <div className="space-y-4">
+                        <h3 className="font-medium text-lg">Notification Settings</h3>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="email-notify">Email Notifications</Label>
+                            <Switch id="email-notify" defaultChecked />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="push-notify">Push Notifications</Label>
+                            <Switch id="push-notify" defaultChecked />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="budget-alerts">Budget Alerts</Label>
+                            <Switch id="budget-alerts" defaultChecked />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="market-updates">Market Updates</Label>
+                            <Switch id="market-updates" defaultChecked />
+                          </div>
+                        </div>
+                        <div className="border-t pt-2">
+                          <h4 className="font-medium mb-2">Recent Notifications</h4>
+                          <div className="space-y-2 max-h-40 overflow-y-auto">
+                            <div className="text-sm p-2 bg-secondary rounded">
+                              <p className="font-medium">Budget Limit Alert</p>
+                              <p className="text-muted-foreground">You've reached 80% of your monthly food budget</p>
+                              <p className="text-xs text-muted-foreground mt-1">Just now</p>
+                            </div>
+                            <div className="text-sm p-2 bg-secondary rounded">
+                              <p className="font-medium">New Feature Available</p>
+                              <p className="text-muted-foreground">Try out our new AI-powered financial assistant</p>
+                              <p className="text-xs text-muted-foreground mt-1">2 hours ago</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                )}
+                
                 {showCurrencyToggle && <ThemeToggle />}
                 {!showCurrencyToggle && <ThemeToggle />}
                 
@@ -134,6 +189,7 @@ export default function Navbar() {
                       <DropdownMenuItem asChild>
                         <Link to="/bank-accounts">Link Bank Account</Link>
                       </DropdownMenuItem>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
                         <Link to="/logout" className="text-red-500 flex items-center">
                           <LogOut className="h-4 w-4 mr-2" /> Logout
@@ -147,6 +203,54 @@ export default function Navbar() {
 
             {/* Mobile Navigation Toggle */}
             <div className="md:hidden flex items-center space-x-2">
+              {user && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="relative">
+                      <Bell className="h-5 w-5" />
+                      <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80">
+                    <div className="space-y-4">
+                      <h3 className="font-medium text-lg">Notification Settings</h3>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="email-notify">Email Notifications</Label>
+                          <Switch id="email-notify" defaultChecked />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="push-notify">Push Notifications</Label>
+                          <Switch id="push-notify" defaultChecked />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="budget-alerts">Budget Alerts</Label>
+                          <Switch id="budget-alerts" defaultChecked />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="market-updates">Market Updates</Label>
+                          <Switch id="market-updates" defaultChecked />
+                        </div>
+                      </div>
+                      <div className="border-t pt-2">
+                        <h4 className="font-medium mb-2">Recent Notifications</h4>
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                          <div className="text-sm p-2 bg-secondary rounded">
+                            <p className="font-medium">Budget Limit Alert</p>
+                            <p className="text-muted-foreground">You've reached 80% of your monthly food budget</p>
+                            <p className="text-xs text-muted-foreground mt-1">Just now</p>
+                          </div>
+                          <div className="text-sm p-2 bg-secondary rounded">
+                            <p className="font-medium">New Feature Available</p>
+                            <p className="text-muted-foreground">Try out our new AI-powered financial assistant</p>
+                            <p className="text-xs text-muted-foreground mt-1">2 hours ago</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
               {showCurrencyToggle && <ThemeToggle />}
               {!showCurrencyToggle && <ThemeToggle />}
               <Button variant="ghost" size="icon" onClick={toggleMenu}>

@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/context/AuthContext";
-import { CollaborationProvider } from "@/context/CollaborationContext";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
@@ -30,45 +29,43 @@ import Contact from "@/pages/Contact";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
 import NewsBulletin from "@/pages/NewsBulletin";
-import Collaborations from "@/pages/Collaborations";
+import { VoiceCommandSystem } from "@/components/VoiceCommandSystem";
 
 function App() {
   return (
     <ThemeProvider defaultTheme="system">
       <BrowserRouter>
         <AuthProvider>
-          <CollaborationProvider>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/budget" element={<Budget />} />
-              <Route path="/financial-activities" element={<FinancialActivities />} />
-              <Route path="/transactions" element={<Transactions />} />
-              <Route path="/investment" element={<Investment />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/activity-log" element={<ActivityLog />} />
-              <Route path="/bank-accounts" element={<BankAccounts />} />
-              <Route path="/logout" element={<Logout />} />
-              <Route path="/verify-email" element={<VerifyEmail />} />
-              <Route path="/verify-phone" element={<VerifyPhone />} />
-              <Route path="/feedback" element={<Feedback />} />
-              <Route path="/features" element={<Features />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/assistant" element={<Assistant />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/terms-of-service" element={<TermsOfService />} />
-              <Route path="/news-bulletin" element={<NewsBulletin />} />
-              <Route path="/collaborations" element={<Collaborations />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <Toaster position="bottom-right" />
-          </CollaborationProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/budget" element={<Budget />} />
+            <Route path="/financial-activities" element={<FinancialActivities />} />
+            <Route path="/transactions" element={<Transactions />} />
+            <Route path="/investment" element={<Investment />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/activity-log" element={<ActivityLog />} />
+            <Route path="/bank-accounts" element={<BankAccounts />} />
+            <Route path="/logout" element={<Logout />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/verify-phone" element={<VerifyPhone />} />
+            <Route path="/feedback" element={<Feedback />} />
+            <Route path="/features" element={<Features />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/assistant" element={<Assistant />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/news-bulletin" element={<NewsBulletin />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <Toaster position="bottom-right" />
+          <VoiceCommandSystem />
         </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>
