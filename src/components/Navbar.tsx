@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "@/components/ui/button";
-// import { LiveClock } from "@/components/LiveClock";
+import { LiveClock } from "@/components/LiveClock";
 // import { LiveWeather } from "@/components/LiveWeather";
 import { 
   CircleDollarSign,
@@ -341,8 +341,8 @@ export default function Navbar() {
       
       {/* Weather and Clock Widget moved below navbar */}
       <div className="container mx-auto px-4 py-2 flex flex-wrap justify-center md:justify-end items-center gap-2">
-{/*         <LiveWeather />
-        <LiveClock /> */}
+{/* {        <LiveWeather /> */}
+        <LiveClock />
       </div>
     </>
   );
