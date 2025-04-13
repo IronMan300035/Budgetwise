@@ -12,7 +12,7 @@ export default function PrivacyPolicy() {
           <h1 className="text-3xl font-bold mb-6">Privacy Policy</h1>
           
           <div className="prose prose-lg dark:prose-invert">
-            <p>Last Updated: April 3, 2023</p>
+            <p>Last Updated: April 3, 2025</p>
             
             <h2>Introduction</h2>
             <p>
