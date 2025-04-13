@@ -12,7 +12,7 @@ export default function TermsOfService() {
           <h1 className="text-3xl font-bold mb-6">Terms of Service</h1>
           
           <div className="prose prose-lg dark:prose-invert">
-            <p>Last Updated: April 3, 2023</p>
+            <p>Last Updated: April 3, 2025</p>
             
             <h2>Agreement to Terms</h2>
             <p>
@@ -56,7 +56,7 @@ export default function TermsOfService() {
             
             <h2>Contact Us</h2>
             <p>
-              If you have questions about these Terms, please contact us at terms@budgetwise.com.
+              If you have questions about these Terms, please contact us at support@budgetwise.com
             </p>
           </div>
         </div>
