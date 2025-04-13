@@ -9,7 +9,7 @@ export default function About() {
       name: "Ankit Paul",
       role: "CEO & Founder",
       bio: "Previously led fintech initiatives at major banks. Passionate about democratizing financial tools for everyone.",
-      image: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
+      image: "https://media.licdn.com/dms/image/v2/D5603AQEkZgMqZZA2iQ/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1714047406122?e=2147483647&v=beta&t=G-7UQtU00kgxtc5slnmG6gnAoNf9RoQb2Hc0WyTiFvo",
     },
     {
       name: "Tejas Juneja",
