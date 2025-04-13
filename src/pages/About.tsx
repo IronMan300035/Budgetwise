@@ -26,7 +26,7 @@ export default function About() {
     {
       name: "Ms. Kriti Sharma",
       role: "Head of Product",
-      bio: "User experience specialist focused on creating intuitive financial tools that anyone can use.",
+      bio: "Assistant Professor - Computer Science and Engineering . User experience specialist focused on creating intuitive financial tools that anyone can use.",
       image: "https://media.licdn.com/dms/image/v2/C5603AQHBGNe9iXX15w/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1584196822273?e=1750291200&v=beta&t=zkH52YAhk9J_wd-YzJE4QG7SBdjhV8lpq2K7-qcpbNA",
     },
   ];
