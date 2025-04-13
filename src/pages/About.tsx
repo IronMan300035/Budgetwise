@@ -9,13 +9,13 @@ export default function About() {
       name: "Ankit Paul",
       role: "CEO & Founder",
       bio: "Previously led fintech initiatives at major banks. Passionate about democratizing financial tools for everyone.",
-      image: "https://media.licdn.com/dms/image/v2/D5603AQEkZgMqZZA2iQ/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1714047406122?e=2147483647&v=beta&t=G-7UQtU00kgxtc5slnmG6gnAoNf9RoQb2Hc0WyTiFvo",
+      image: "https://media.licdn.com/dms/image/v2/D4E03AQEheLhWTyOqTQ/profile-displayphoto-shrink_800_800/B4EZUu_vouGYAg-/0/1740250218329?e=1750291200&v=beta&t=HQKLHTzq-JLdh1LBMNEbl2-4rLUovqvyVN1DsoI3710",
     },
     {
       name: "Tejas Juneja",
       role: "CEO & Founder",
       bio: "Software engineer with expertise in AI and financial systems. Dedicated to building secure and scalable fintech solutions.",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
+      image: "https://media.licdn.com/dms/image/v2/D5603AQEkZgMqZZA2iQ/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1714047406122?e=2147483647&v=beta&t=G-7UQtU00kgxtc5slnmG6gnAoNf9RoQb2Hc0WyTiFvo",
     },
     {
       name: "Dr. Pankaj Aggarwal",
@@ -27,7 +27,7 @@ export default function About() {
       name: "Ms. Kriti Sharma",
       role: "Head of Product",
       bio: "User experience specialist focused on creating intuitive financial tools that anyone can use.",
-      image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
+      image: "https://media.licdn.com/dms/image/v2/C5603AQHBGNe9iXX15w/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1584196822273?e=1750291200&v=beta&t=zkH52YAhk9J_wd-YzJE4QG7SBdjhV8lpq2K7-qcpbNA",
     },
   ];
 
