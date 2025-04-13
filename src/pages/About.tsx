@@ -50,7 +50,7 @@ export default function About() {
               </p>
               <h2 className="text-2xl font-semibold mb-4">Our Story</h2>
               <p className="text-lg">
-                BudgetWise began in 2021 when our founders, frustrated with the complexity of existing financial tools, set out to build something better. What started as a simple budgeting app has grown into a comprehensive platform that helps thousands of users track, plan, and grow their finances.
+                BudgetWise began in 2025 when our founders, frustrated with the complexity of existing financial tools, set out to build something better. What started as a simple budgeting app has grown into a comprehensive platform that helps thousands of users track, plan, and grow their finances.
               </p>
             </div>
             
