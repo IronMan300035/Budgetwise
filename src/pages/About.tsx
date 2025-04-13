@@ -15,7 +15,7 @@ export default function About() {
       name: "Tejas Juneja",
       role: "CEO & Founder",
       bio: "BCA Student Specializing in AI ,Data Science & Machine Learning | Bridging the Gap between Data Science and Practical Applications",
-      image: "https://drive.google.com/u/0/drive-viewer/AKGpihYmOihyiCKQfit_XJFxqmBObdsBkNmYR6vw4mmqX388o7LY_CllPqZGck8qJIW6-LA-Keh8YDJhCSjhuI0FH9eOsC8oxjIenmU=s1600-rw-v1",
+      image: "https://media.licdn.com/dms/image/v2/D5635AQFEqlewYPNW8A/profile-framedphoto-shrink_400_400/profile-framedphoto-shrink_400_400/0/1714047407560?e=1745182800&v=beta&t=xcUAZ9MksH9lg_QnuqiBF0LUM2xaycHv2Q3Gvb0ewks",
     },
     {
       name: "Dr. Pankaj Aggarwal",
