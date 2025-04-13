@@ -20,7 +20,7 @@ export default function About() {
     {
       name: "Dr. Pankaj Aggarwal",
       role: "Mentor",
-      bio: "Former investment banker with 15+ years of experience in personal finance and wealth management.",
+      bio: "Dr. Pankaj Agarwal is Professor & Dean (Engineering) at K.R. Mangalam University with over 21 years of teaching and 15+ years of research experience. He holds a Ph.D. in Computer Science and has published 45+ papers, 7 patents, and supervised 5 Ph.D. scholars. His expertise includes Data Science, ML, NLP, and Deep Learning.",
       image: "https://cdn-ilakggn.nitrocdn.com/qfLlPHxtFDGRhIOUKhiZcDNvbHvEtWcT/assets/images/optimized/rev-b491dba/www.krmangalam.edu.in/wp-content/uploads/2023/12/Mask-group-37.webp",
     },
     {
