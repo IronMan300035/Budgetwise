@@ -8,13 +8,13 @@ export default function About() {
     {
       name: "Ankit Paul",
       role: "CEO & Founder",
-      bio: "Previously led fintech initiatives at major banks. Passionate about democratizing financial tools for everyone.",
+      bio: "Currently, I'm a Bachelor of Computer Application student specializing in AI and Data Science. As a budding Computer Application bachelor's student, I've plunged into AI with the guidance of Samatrix and IBM, pushing boundaries both academically and practically.",
       image: "https://media.licdn.com/dms/image/v2/D4E03AQEheLhWTyOqTQ/profile-displayphoto-shrink_800_800/B4EZUu_vouGYAg-/0/1740250218329?e=1750291200&v=beta&t=HQKLHTzq-JLdh1LBMNEbl2-4rLUovqvyVN1DsoI3710",
     },
     {
       name: "Tejas Juneja",
       role: "CEO & Founder",
-      bio: "Software engineer with expertise in AI and financial systems. Dedicated to building secure and scalable fintech solutions.",
+      bio: "BCA Student Specializing in AI ,Data Science & Machine Learning | Bridging the Gap between Data Science and Practical Applications",
       image: "https://media.licdn.com/dms/image/v2/D5603AQEkZgMqZZA2iQ/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1714047406122?e=2147483647&v=beta&t=G-7UQtU00kgxtc5slnmG6gnAoNf9RoQb2Hc0WyTiFvo",
     },
     {
