@@ -21,7 +21,7 @@ export default function About() {
       name: "Dr. Pankaj Aggarwal",
       role: "Mentor",
       bio: "Former investment banker with 15+ years of experience in personal finance and wealth management.",
-      image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
+      image: "https://cdn-ilakggn.nitrocdn.com/qfLlPHxtFDGRhIOUKhiZcDNvbHvEtWcT/assets/images/optimized/rev-b491dba/www.krmangalam.edu.in/wp-content/uploads/2023/12/Mask-group-37.webp",
     },
     {
       name: "Ms. Kriti Sharma",
