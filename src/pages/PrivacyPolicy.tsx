@@ -54,7 +54,7 @@ export default function PrivacyPolicy() {
             
             <h2>Contact Us</h2>
             <p>
-              If you have questions or concerns about this Privacy Policy, please contact us at privacy@budgetwise.com.
+              If you have questions or concerns about this Privacy Policy, please contact us at support@budgetwise.com.
             </p>
           </div>
         </div>
