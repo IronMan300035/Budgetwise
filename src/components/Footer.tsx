@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { CircleDollarSign, Settings, Heart, Twitter, Github, Linkedin, Facebook } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { LiveClock } from "./LiveClock";
-import { LiveWeather } from "./LiveWeather";
+// import { LiveClock } from "./LiveClock";
+// import { LiveWeather } from "./LiveWeather";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -127,8 +127,8 @@ export default function Footer() {
             </ul>
             
             <div className="mt-6 space-y-3">
-              <LiveClock />
-              <LiveWeather />
+{/*               <LiveClock />
+              <LiveWeather /> */}
             </div>
           </div>
         </div>
