@@ -1,4 +1,4 @@
-# Budgetify - Personal Finance Management App
+# Budgetwise - Personal Finance Management App
 
 A modern, responsive personal finance management application built with React and TypeScript.
 
