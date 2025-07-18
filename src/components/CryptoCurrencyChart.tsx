@@ -155,13 +155,11 @@ export function CryptoCurrencyChart() {
     
     try {
       const result = await addInvestment({
-        type: 'crypto',
         name: activeCrypto.name,
         symbol: activeCrypto.symbol,
-        amount: parseFloat(investAmount),
-        quantity: parseFloat(investAmount) / activeCrypto.price,
-        purchase_date: new Date().toISOString().split('T')[0],
-        notes: `Investment in ${activeCrypto.name} cryptocurrency at price ₹${activeCrypto.price.toLocaleString()}`
+        purchase_price: activeCrypto.price,
+        shares: parseFloat(investAmount) / activeCrypto.price,
+        purchase_date: new Date().toISOString().split('T')[0]
       });
 
       if (result) {

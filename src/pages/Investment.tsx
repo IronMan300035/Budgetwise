@@ -178,7 +178,7 @@ const sipOptions = [
 export default function Investment() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { investments, loading: investmentsLoading, addInvestment, deleteInvestment, getInvestmentsByType } = useInvestments();
+  const { investments, loading: investmentsLoading, addInvestment, deleteInvestment, getInvestmentsBySymbol } = useInvestments();
   
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isMarketLoading, setIsMarketLoading] = useState(true);
@@ -287,13 +287,11 @@ export default function Investment() {
     
     try {
       await addInvestment({
-        type: investType,
         name,
-        amount: parseFloat(amount),
-        quantity: quantity ? parseFloat(quantity) : undefined,
-        symbol,
-        notes,
-        purchase_date: purchaseDate,
+        symbol: symbol || name,
+        purchase_price: parseFloat(amount) / (quantity ? parseFloat(quantity) : 1),
+        shares: quantity ? parseFloat(quantity) : 1,
+        purchase_date: purchaseDate
       });
       
       resetForm();
@@ -316,13 +314,11 @@ export default function Investment() {
     
     try {
       await addInvestment({
-        type: "stock",
         name: selectedStock.fullName,
-        amount: totalAmount,
-        quantity: parseFloat(stockQuantity),
         symbol: selectedStock.name,
-        notes: `Sector: ${selectedStock.sector}`,
-        purchase_date: format(new Date(), "yyyy-MM-dd"),
+        purchase_price: selectedStock.price,
+        shares: parseFloat(stockQuantity),
+        purchase_date: format(new Date(), "yyyy-MM-dd")
       });
       
       setIsStockDialogOpen(false);
@@ -349,11 +345,11 @@ export default function Investment() {
     
     try {
       await addInvestment({
-        type: "sip",
         name: selectedSIP.name,
-        amount: parseFloat(sipAmount),
-        notes: `Category: ${selectedSIP.category}, Frequency: ${sipFrequency}`,
-        purchase_date: format(new Date(), "yyyy-MM-dd"),
+        symbol: selectedSIP.category,
+        purchase_price: parseFloat(sipAmount),
+        shares: 1,
+        purchase_date: format(new Date(), "yyyy-MM-dd")
       });
       
       setIsSipDialogOpen(false);
@@ -367,25 +363,16 @@ export default function Investment() {
     }
   };
   
-  const totalInvestment = investments.reduce((sum, inv) => sum + Number(inv.amount), 0);
-  const investmentsByType = getInvestmentsByType();
+  const totalInvestment = investments.reduce((sum, inv) => sum + (Number(inv.purchase_price) * Number(inv.shares)), 0);
+  const investmentsBySymbol = getInvestmentsBySymbol();
   
-  const portfolioChartData = Object.keys(investmentsByType).map(type => ({
-    name: type === 'sip' ? 'SIP' : 
-          type === 'stock' ? 'Stocks' : 
-          type === 'mutual_fund' ? 'Mutual Funds' : 
-          type === 'crypto' ? 'Crypto' : 'Other',
-    value: investmentsByType[type]
+  const portfolioChartData = Object.keys(investmentsBySymbol).map(symbol => ({
+    name: symbol,
+    value: investmentsBySymbol[symbol]
   }));
   
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'sip': return <Calendar className="h-4 w-4 mr-2 text-indigo-600" />;
-      case 'stock': return <Landmark className="h-4 w-4 mr-2 text-blue-600" />;
-      case 'mutual_fund': return <BarChart4 className="h-4 w-4 mr-2 text-teal-600" />;
-      case 'crypto': return <Coins className="h-4 w-4 mr-2 text-amber-600" />;
-      default: return <IndianRupee className="h-4 w-4 mr-2 text-gray-600" />;
-    }
+  const getTypeIcon = (symbol: string) => {
+    return <Landmark className="h-4 w-4 mr-2 text-blue-600" />;
   };
   
   const openMutualFundDetail = (fund: any) => {
@@ -656,8 +643,8 @@ export default function Investment() {
                           <tr key={investment.id} className="border-t hover:bg-muted/30">
                             <td className="px-4 py-3 capitalize">
                               <div className="flex items-center">
-                                {getTypeIcon(investment.type)}
-                                {investment.type.replace('_', ' ')}
+                                {getTypeIcon(investment.symbol)}
+                                Investment
                               </div>
                             </td>
                             <td className="px-4 py-3">
@@ -670,10 +657,10 @@ export default function Investment() {
                               {format(new Date(investment.purchase_date), "MMM d, yyyy")}
                             </td>
                             <td className="px-4 py-3 text-right">
-                              <div className="font-medium">₹{Number(investment.amount).toLocaleString()}</div>
+                              <div className="font-medium">₹{(Number(investment.purchase_price) * Number(investment.shares)).toLocaleString()}</div>
                             </td>
                             <td className="px-4 py-3 text-right">
-                              {investment.quantity || "-"}
+                              {investment.shares || "-"}
                             </td>
                             <td className="px-4 py-3 text-center">
                               <Button

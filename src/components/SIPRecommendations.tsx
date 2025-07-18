@@ -239,12 +239,11 @@ export function SIPRecommendations() {
   const handleStartSIP = async (sip: SIPRecommendation) => {
     try {
       const result = await addInvestment({
-        type: 'mutual_fund',
         name: sip.name,
         symbol: sip.category,
-        amount: monthlyAmount,
-        purchase_date: new Date().toISOString().split('T')[0],
-        notes: `SIP investment in ${sip.category} category with ${frequency} frequency. ${sip.recommendation}`
+        purchase_price: monthlyAmount,
+        shares: 1,
+        purchase_date: new Date().toISOString().split('T')[0]
       });
 
       if (result) {

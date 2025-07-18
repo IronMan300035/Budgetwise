@@ -313,15 +313,11 @@ export default function NewsBulletin() {
               filteredNews.map(newsItem => (
                 <Card key={newsItem.id} className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleReadMore(newsItem.url)}>
                   <CardContent className="p-0">
-                    {newsItem.imageUrl && (
-                      <div className="aspect-video w-full overflow-hidden">
-                        <img 
-                          src={newsItem.imageUrl} 
-                          alt={newsItem.title} 
-                          className="w-full h-full object-cover transition-transform hover:scale-105"
-                        />
+                    <div className="aspect-video w-full overflow-hidden bg-muted">
+                      <div className="w-full h-full flex items-center justify-center">
+                        <span className="text-muted-foreground text-sm">News Image</span>
                       </div>
-                    )}
+                    </div>
                     <div className="p-4 border-b bg-accent/20">
                       <div className="flex justify-between items-start">
                         <div>

@@ -210,13 +210,11 @@ export function StockRecommendations() {
     
     try {
       const result = await addInvestment({
-        type: 'stock',
         name: stock.fullName,
         symbol: stock.name,
-        amount: stock.price * quantity,
-        quantity: quantity,
-        purchase_date: new Date().toISOString().split('T')[0],
-        notes: `Investment in ${stock.sector} sector. ${stock.recommendation}`
+        purchase_price: stock.price,
+        shares: quantity,
+        purchase_date: new Date().toISOString().split('T')[0]
       });
 
       if (result) {
