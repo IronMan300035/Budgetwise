@@ -1,7 +1,1 @@
-
-project_id = "icgtfegihzcybwvmrhuv"
-
-[storage]
-[[storage.buckets]]
-name = "avatars"
-public = true
+project_id = "yqpsvtulywmuoxczemoz"
