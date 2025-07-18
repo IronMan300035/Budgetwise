@@ -12,8 +12,9 @@ export interface Transaction {
   amount: number;
   category: string;
   description: string | null;
-  transaction_date: string;
+  date: string;  // Match database column name
   created_at: string;
+  updated_at: string;
   displayAmount?: number;  // For currency conversion display
 }
 
@@ -103,14 +104,14 @@ export const useTransactions = () => {
         .from('transactions')
         .select('*')
         .eq('user_id', user.id)  // Make sure we only get this user's transactions
-        .order('transaction_date', { ascending: false });
+        .order('date', { ascending: false });
 
       if (dateRange.start) {
-        query = query.gte('transaction_date', dateRange.start.toISOString().split('T')[0]);
+        query = query.gte('date', dateRange.start.toISOString().split('T')[0]);
       }
 
       if (dateRange.end) {
-        query = query.lte('transaction_date', dateRange.end.toISOString().split('T')[0]);
+        query = query.lte('date', dateRange.end.toISOString().split('T')[0]);
       }
 
       const { data, error } = await query;
@@ -133,7 +134,7 @@ export const useTransactions = () => {
     }
   };
 
-  const addTransaction = async (newTransaction: Omit<Transaction, 'id' | 'user_id' | 'created_at'>) => {
+  const addTransaction = async (newTransaction: Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     if (!user) return;
 
     try {
@@ -174,7 +175,7 @@ export const useTransactions = () => {
     }
   };
 
-  const updateTransaction = async (id: string, updates: Partial<Omit<Transaction, 'id' | 'user_id' | 'created_at'>>) => {
+  const updateTransaction = async (id: string, updates: Partial<Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) => {
     if (!user) return;
 
     try {

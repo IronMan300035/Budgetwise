@@ -7,13 +7,12 @@ import { toast } from 'sonner';
 export interface Investment {
   id: string;
   user_id: string;
-  type: 'sip' | 'stock' | 'mutual_fund' | 'crypto' | 'other';
   name: string;
-  amount: number;
-  quantity?: number;
+  symbol: string;
+  purchase_price: number;  // Match database column
+  shares: number;         // Match database column
+  current_price?: number; // Match database column
   purchase_date: string;
-  symbol?: string;
-  notes?: string;
   created_at: string;
   updated_at: string;
 }
@@ -54,10 +53,10 @@ export const useInvestments = () => {
       const { error: transactionError } = await supabase.from('transactions').insert({
         user_id: user.id,
         type: 'expense',
-        amount: newInvestment.amount,
-        category: `Investment: ${newInvestment.type}`,
+        amount: newInvestment.purchase_price * newInvestment.shares,
+        category: 'Investment',
         description: `Investment in ${newInvestment.name}`,
-        transaction_date: newInvestment.purchase_date
+        date: newInvestment.purchase_date
       });
 
       if (transactionError) throw transactionError;
@@ -74,7 +73,7 @@ export const useInvestments = () => {
       await supabase.from('activity_logs').insert({
         user_id: user.id,
         activity_type: 'investment',
-        description: `Added new ${newInvestment.type} investment: ₹${newInvestment.amount} - ${newInvestment.name}`
+        description: `Added new investment: ₹${newInvestment.purchase_price * newInvestment.shares} - ${newInvestment.name}`
       });
 
       setInvestments(prev => [data[0] as Investment, ...prev]);
@@ -106,20 +105,23 @@ export const useInvestments = () => {
         
       if (fetchError) throw fetchError;
       
-      // If amount changed, create an adjustment transaction
-      if (updates.amount && updates.amount !== originalData.amount) {
-        const amountDifference = updates.amount - originalData.amount;
+      // If investment value changed, create an adjustment transaction
+      const originalValue = originalData.purchase_price * originalData.shares;
+      const newValue = (updates.purchase_price || originalData.purchase_price) * (updates.shares || originalData.shares);
+      
+      if (newValue !== originalValue) {
+        const valueDifference = newValue - originalValue;
         
-        if (amountDifference !== 0) {
-          // If amount increased, add an expense transaction for the additional investment
-          // If amount decreased, add an income transaction for the reduction in investment
+        if (valueDifference !== 0) {
+          // If value increased, add an expense transaction for the additional investment
+          // If value decreased, add an income transaction for the reduction in investment
           const { error: transactionError } = await supabase.from('transactions').insert({
             user_id: user.id,
-            type: amountDifference > 0 ? 'expense' : 'income',
-            amount: Math.abs(amountDifference),
-            category: `Investment Adjustment: ${originalData.type}`,
+            type: valueDifference > 0 ? 'expense' : 'income',
+            amount: Math.abs(valueDifference),
+            category: 'Investment Adjustment',
             description: `Adjustment for ${originalData.name}`,
-            transaction_date: updates.purchase_date || originalData.purchase_date
+            date: updates.purchase_date || originalData.purchase_date
           });
           
           if (transactionError) throw transactionError;
@@ -139,7 +141,7 @@ export const useInvestments = () => {
       await supabase.from('activity_logs').insert({
         user_id: user.id,
         activity_type: 'investment',
-        description: `Updated ${updates.type || 'investment'}: ${updates.name || ''}`
+        description: `Updated investment: ${updates.name || ''}`
       });
 
       setInvestments(prev =>
@@ -174,13 +176,14 @@ export const useInvestments = () => {
       if (fetchError) throw fetchError;
       
       // Add an income transaction to offset the investment (representing liquidation)
+      const investmentValue = investment.purchase_price * investment.shares;
       const { error: transactionError } = await supabase.from('transactions').insert({
         user_id: user.id,
         type: 'income',
-        amount: investment.amount,
-        category: `Investment Liquidation: ${investment.type}`,
+        amount: investmentValue,
+        category: 'Investment Liquidation',
         description: `Liquidated ${investment.name}`,
-        transaction_date: new Date().toISOString().split('T')[0]
+        date: new Date().toISOString().split('T')[0]
       });
       
       if (transactionError) throw transactionError;
@@ -213,14 +216,14 @@ export const useInvestments = () => {
   };
 
   const getInvestmentTotal = () => {
-    return investments.reduce((sum, inv) => sum + Number(inv.amount), 0);
+    return investments.reduce((sum, inv) => sum + (Number(inv.purchase_price) * Number(inv.shares)), 0);
   };
 
-  const getInvestmentsByType = () => {
+  const getInvestmentsBySymbol = () => {
     return investments.reduce((acc, inv) => {
-      const type = inv.type;
-      if (!acc[type]) acc[type] = 0;
-      acc[type] += Number(inv.amount);
+      const symbol = inv.symbol;
+      if (!acc[symbol]) acc[symbol] = 0;
+      acc[symbol] += Number(inv.purchase_price) * Number(inv.shares);
       return acc;
     }, {} as Record<string, number>);
   };
@@ -239,6 +242,6 @@ export const useInvestments = () => {
     deleteInvestment,
     fetchInvestments,
     getInvestmentTotal,
-    getInvestmentsByType
+    getInvestmentsBySymbol
   };
 };
