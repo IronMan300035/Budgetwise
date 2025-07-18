@@ -30,7 +30,15 @@ export default function VerifyEmail() {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await verifyEmail(otp);
+    try {
+      await verifyEmail(otp);
+      // Redirect to login page after successful verification
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 1500);
+    } catch (error) {
+      console.error("Email verification error:", error);
+    }
   };
   
   return (

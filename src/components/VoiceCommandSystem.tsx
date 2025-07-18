@@ -21,8 +21,7 @@ export function VoiceCommandSystem({ isOpen = false }: VoiceCommandSystemProps) 
   // Initialize speech recognition
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // @ts-ignore - TypeScript doesn't know about webkitSpeechRecognition
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (SpeechRecognition) {
         const recognitionInstance = new SpeechRecognition();
         recognitionInstance.continuous = true;

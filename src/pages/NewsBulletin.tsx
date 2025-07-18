@@ -37,7 +37,8 @@ const generateNewsData = () => {
       summary: "The oil-to-telecom conglomerate posted impressive results driven by robust performance in retail and digital services.",
       source: "Economic Times",
       time: "10 minutes ago",
-      url: "#",
+      url: "https://economictimes.indiatimes.com/industry/energy/oil-gas/reliance-industries-q2-results-net-profit-jumps-to-rs-16000-crore/articleshow/115471234.cms",
+      imageUrl: "https://images.unsplash.com/photo-1556155092-490a1ba16284?q=80&w=400&auto=format&fit=crop",
       category: "stocks",
       impact: "positive"
     },
@@ -47,7 +48,8 @@ const generateNewsData = () => {
       summary: "The merger creates a banking behemoth with a combined balance sheet of over ₹18 trillion.",
       source: "Business Standard",
       time: "35 minutes ago",
-      url: "#",
+      url: "https://www.business-standard.com/companies/news/hdfc-twins-merger-officially-completed-now-world-s-4th-largest-bank-123070101008_1.html",
+      imageUrl: "https://images.unsplash.com/photo-1541354329998-f4d9a9f9297f?q=80&w=400&auto=format&fit=crop",
       category: "stocks",
       impact: "neutral"
     },
@@ -57,7 +59,8 @@ const generateNewsData = () => {
       summary: "The company unveiled its latest electric vehicle with advanced features and competitive pricing.",
       source: "Mint",
       time: "1 hour ago",
-      url: "#",
+      url: "https://www.livemint.com/companies/news/tata-motors-stock-rally-continues-shares-hit-fresh-52-week-high-11693292764634.html",
+      imageUrl: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?q=80&w=400&auto=format&fit=crop",
       category: "stocks",
       impact: "positive"
     },
@@ -203,6 +206,12 @@ export default function NewsBulletin() {
   const [newsData, setNewsData] = useState(generateNewsData());
   const [lastUpdated, setLastUpdated] = useState(new Date());
   
+  const handleReadMore = (url: string) => {
+    if (url && url !== '#') {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  };
+  
   // Update news every 10 seconds
   useEffect(() => {
     const interval = setInterval(() => {
@@ -302,8 +311,17 @@ export default function NewsBulletin() {
               </Card>
             ) : (
               filteredNews.map(newsItem => (
-                <Card key={newsItem.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                <Card key={newsItem.id} className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleReadMore(newsItem.url)}>
                   <CardContent className="p-0">
+                    {newsItem.imageUrl && (
+                      <div className="aspect-video w-full overflow-hidden">
+                        <img 
+                          src={newsItem.imageUrl} 
+                          alt={newsItem.title} 
+                          className="w-full h-full object-cover transition-transform hover:scale-105"
+                        />
+                      </div>
+                    )}
                     <div className="p-4 border-b bg-accent/20">
                       <div className="flex justify-between items-start">
                         <div>
@@ -327,7 +345,12 @@ export default function NewsBulletin() {
                     <div className="p-4">
                       <p className="text-sm mb-4">{newsItem.summary}</p>
                       <div className="flex justify-end">
-                        <Button variant="ghost" size="sm" className="text-blue-600">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-blue-600"
+                          onClick={() => handleReadMore(newsItem.url)}
+                        >
                           <ExternalLink className="h-3.5 w-3.5 mr-1" />
                           Read More
                         </Button>

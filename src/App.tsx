@@ -29,6 +29,8 @@ import Contact from "@/pages/Contact";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
 import NewsBulletin from "@/pages/NewsBulletin";
+import Splitwise from "@/pages/Splitwise";
+import MultipleDashboards from "@/pages/MultipleDashboards";
 import { VoiceCommandSystem } from "@/components/VoiceCommandSystem";
 
 function App() {
@@ -62,6 +64,8 @@ function App() {
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/news-bulletin" element={<NewsBulletin />} />
+            <Route path="/splitwise" element={<Splitwise />} />
+            <Route path="/multiple-dashboards" element={<MultipleDashboards />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster position="bottom-right" />
