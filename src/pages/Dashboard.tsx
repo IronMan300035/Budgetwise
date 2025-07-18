@@ -93,8 +93,8 @@ export default function Dashboard() {
           .from('transactions')
           .select('*')
           .eq('user_id', user.id)
-          .gte('transaction_date', format(startDate, 'yyyy-MM-dd'))
-          .lte('transaction_date', format(endDate, 'yyyy-MM-dd'));
+          .gte('date', format(startDate, 'yyyy-MM-dd'))
+          .lte('date', format(endDate, 'yyyy-MM-dd'));
           
         if (error) throw error;
         
@@ -128,7 +128,7 @@ export default function Dashboard() {
       .slice(0, 5)
       .map(transaction => ({
         ...transaction,
-        formattedDate: format(new Date(transaction.transaction_date), "MMM dd, yyyy")
+        formattedDate: format(new Date(transaction.date), "MMM dd, yyyy")
       }));
   }, [transactions]);
   

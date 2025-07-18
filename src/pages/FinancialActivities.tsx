@@ -196,7 +196,7 @@ export default function FinancialActivities() {
                         </div>
                         <div className="mt-1 flex items-center text-xs text-muted-foreground">
                           <Calendar className="h-3.5 w-3.5 mr-1" />
-                          {format(new Date(transaction.transaction_date), "MMM dd, yyyy")}
+                          {format(new Date(transaction.date), "MMM dd, yyyy")}
                           <span className="mx-2">•</span>
                           <Clock className="h-3.5 w-3.5 mr-1" />
                           {format(new Date(transaction.created_at), "h:mm a")}

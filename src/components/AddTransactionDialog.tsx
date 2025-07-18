@@ -46,7 +46,7 @@ export function AddTransactionDialog({ open, onOpenChange, type, onSuccess }: Ad
       amount: parseFloat(amount),
       category,
       description,
-      transaction_date: format(date, "yyyy-MM-dd"),
+      date: format(date, "yyyy-MM-dd"),
     });
     
     resetForm();

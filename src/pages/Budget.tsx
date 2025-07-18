@@ -90,7 +90,7 @@ export default function Budget() {
     
     if (budgetItem.period === 'monthly') {
       filteredTransactions = filteredTransactions.filter(tx => {
-        const txDate = new Date(tx.transaction_date);
+        const txDate = new Date(tx.date);
         return (
           txDate.getMonth() + 1 === currentMonth &&
           txDate.getFullYear() === currentYear
@@ -98,7 +98,7 @@ export default function Budget() {
       });
     } else {
       filteredTransactions = filteredTransactions.filter(tx => {
-        const txDate = new Date(tx.transaction_date);
+        const txDate = new Date(tx.date);
         return txDate.getFullYear() === currentYear;
       });
     }

@@ -40,7 +40,7 @@ export function MonthlyTrendsChart() {
   const monthlyData = useMemo(() => {
     return months.map(monthData => {
       const monthTransactions = transactions.filter(t => {
-        const transactionDate = parseISO(t.transaction_date);
+        const transactionDate = parseISO(t.date);
         return isAfter(transactionDate, monthData.startDate) && 
                isBefore(transactionDate, monthData.endDate);
       });

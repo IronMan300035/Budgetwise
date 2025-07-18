@@ -29,7 +29,7 @@ export default function Transactions() {
   const [addExpenseOpen, setAddExpenseOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<{ field: string; direction: "asc" | "desc" }>({
-    field: "transaction_date",
+    field: "date",
     direction: "desc"
   });
   const [datePickerRange, setDatePickerRange] = useState<DateRange | undefined>({
@@ -92,9 +92,9 @@ export default function Transactions() {
   });
   
   const sortedTransactions = [...filteredTransactions].sort((a, b) => {
-    if (sortBy.field === "transaction_date") {
-      const dateA = new Date(a.transaction_date);
-      const dateB = new Date(b.transaction_date);
+    if (sortBy.field === "date") {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
       return sortBy.direction === "asc" ? dateA.getTime() - dateB.getTime() : dateB.getTime() - dateA.getTime();
     }
     
@@ -200,11 +200,11 @@ export default function Transactions() {
                       <tr className="bg-muted/50">
                         <th 
                           className="px-4 py-3 text-left cursor-pointer hover:bg-muted"
-                          onClick={() => handleSort("transaction_date")}
+                          onClick={() => handleSort("date")}
                         >
                           <div className="flex items-center">
                             Date
-                            {sortBy.field === "transaction_date" && (
+                            {sortBy.field === "date" && (
                               <ArrowDownUp 
                                 className={`h-3 w-3 ml-1 ${sortBy.direction === "desc" ? "rotate-180" : ""}`} 
                               />
@@ -252,7 +252,7 @@ export default function Transactions() {
                         sortedTransactions.map((tx) => (
                           <tr key={tx.id} className="border-t hover:bg-muted/30">
                             <td className="px-4 py-3">
-                              {format(new Date(tx.transaction_date), "MMM dd, yyyy")}
+                              {format(new Date(tx.date), "MMM dd, yyyy")}
                             </td>
                             <td className="px-4 py-3">
                               {tx.description || tx.category}
