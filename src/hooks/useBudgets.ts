@@ -68,6 +68,7 @@ export const useBudgets = () => {
     try {
       const { data, error } = await supabase.from('budgets').insert({
         ...newBudget,
+        name: newBudget.category, // Use category as name for backward compatibility
         user_id: user.id,
       }).select();
 

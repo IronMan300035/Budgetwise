@@ -53,10 +53,10 @@ export const useCollaborations = () => {
 
       // Get collaborations where the user is a collaborator with active status
       const { data: memberCollaborations, error: memberError } = await supabase
-        .from('collaborators')
+        .from('collaboration_members')
         .select('collaboration_id')
         .eq('user_id', user.id)
-        .eq('status', 'active');
+        .eq('status', 'accepted');
 
       if (memberError) throw memberError;
 
@@ -80,7 +80,7 @@ export const useCollaborations = () => {
       const collaborationsWithCollaborators = await Promise.all(
         allCollaborations.map(async (collab) => {
           const { data: collaborators, error: collaboratorsError } = await supabase
-            .from('collaborators')
+            .from('collaboration_members')
             .select('*')
             .eq('collaboration_id', collab.id);
 
@@ -95,7 +95,7 @@ export const useCollaborations = () => {
               const { data: profileData } = await supabase
                 .from('profiles')
                 .select('email, first_name, last_name')
-                .eq('id', collaborator.user_id)
+                .eq('user_id', collaborator.user_id)
                 .single();
 
               return {
@@ -165,7 +165,7 @@ export const useCollaborations = () => {
       // First, find the user ID for the given email
       const { data: userData, error: userError } = await supabase
         .from('profiles')
-        .select('id')
+        .select('user_id')
         .eq('email', email)
         .single();
 
@@ -174,17 +174,17 @@ export const useCollaborations = () => {
         return false;
       }
 
-      if (!userData?.id) {
+      if (!userData?.user_id) {
         toast.error('User not found');
         return false;
       }
 
       // Check if the invitation already exists
       const { data: existingInvite, error: existingError } = await supabase
-        .from('collaborators')
+        .from('collaboration_members')
         .select('*')
         .eq('collaboration_id', collaborationId)
-        .eq('user_id', userData.id)
+        .eq('user_id', userData.user_id)
         .single();
 
       if (existingInvite) {
@@ -194,10 +194,10 @@ export const useCollaborations = () => {
 
       // Add the new collaborator with pending status
       const { data, error } = await supabase
-        .from('collaborators')
+        .from('collaboration_members')
         .insert({
           collaboration_id: collaborationId,
-          user_id: userData.id,
+          user_id: userData.user_id,
           role,
           status: 'pending'
         })
@@ -244,7 +244,7 @@ export const useCollaborations = () => {
 
     try {
       const { error } = await supabase
-        .from('collaborators')
+        .from('collaboration_members')
         .update(updates)
         .eq('id', collaboratorId)
         .eq('collaboration_id', collaborationId);
@@ -281,7 +281,7 @@ export const useCollaborations = () => {
 
     try {
       const { error } = await supabase
-        .from('collaborators')
+        .from('collaboration_members')
         .delete()
         .eq('id', collaboratorId)
         .eq('collaboration_id', collaborationId);
@@ -396,7 +396,7 @@ export const useCollaborations = () => {
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
-        table: 'collaborators',
+        table: 'collaboration_members',
       }, () => {
         fetchCollaborations();
       })

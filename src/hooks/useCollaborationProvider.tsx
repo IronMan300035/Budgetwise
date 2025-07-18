@@ -59,10 +59,10 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Then get all collaborations where the user is a collaborator
       const { data: collaboratorData, error: collaboratorError } = await supabase
-        .from('collaborators')
+        .from('collaboration_members')
         .select('collaboration_id')
         .eq('user_id', user.id)
-        .eq('status', 'active');
+        .eq('status', 'accepted');
 
       if (collaboratorError) throw collaboratorError;
 
@@ -88,7 +88,7 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
         allCollaborations.map(async (collab) => {
           // First fetch collaborator data
           const { data: collaboratorsData, error: collabError } = await supabase
-            .from('collaborators')
+            .from('collaboration_members')
             .select('id, user_id, role, status, created_at')
             .eq('collaboration_id', collab.id);
 
@@ -105,7 +105,7 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
             const { data: profileData } = await supabase
               .from('profiles')
               .select('email')
-              .eq('id', collaborator.user_id)
+              .eq('user_id', collaborator.user_id)
               .single();
               
             return {
@@ -178,7 +178,7 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
       // First find the user by email
       const { data: userData, error: userError } = await supabase
         .from('profiles')
-        .select('id')
+        .select('user_id')
         .eq('email', email)
         .single();
 
@@ -189,10 +189,10 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Check if user is already a collaborator
       const { data: existingCollab, error: checkError } = await supabase
-        .from('collaborators')
+        .from('collaboration_members')
         .select('*')
         .eq('collaboration_id', collaborationId)
-        .eq('user_id', userData.id);
+        .eq('user_id', userData.user_id);
 
       if (checkError) throw checkError;
 
@@ -203,10 +203,10 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Add the collaborator
       const { data, error } = await supabase
-        .from('collaborators')
+        .from('collaboration_members')
         .insert({
           collaboration_id: collaborationId,
-          user_id: userData.id,
+          user_id: userData.user_id,
           role,
           status: 'pending'
         })
@@ -224,7 +224,7 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
                 ...collab.collaborators,
                 {
                   id: data[0].id,
-                  user_id: userData.id,
+                  user_id: userData.user_id,
                   email,
                   role,
                   status: 'pending',
@@ -251,7 +251,7 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
 
     try {
       const { error } = await supabase
-        .from('collaborators')
+        .from('collaboration_members')
         .delete()
         .eq('id', collaboratorId);
 
@@ -367,7 +367,7 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
       .on('postgres_changes', { 
         event: '*', 
         schema: 'public', 
-        table: 'collaborators' 
+        table: 'collaboration_members' 
       }, () => {
         fetchCollaborations();
       })
