@@ -78,8 +78,8 @@ export default function Navbar() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
               <Link to="/" className="flex items-center space-x-2">
-                <CircleDollarSign className="h-6 w-6 text-primary" />
-                <span className="font-bold text-xl">BudgetWise</span>
+                <CircleDollarSign className="h-6 w-6 text-primary animate-spin" style={{ animationDuration: '3s' }} />
+                <span className="font-bold text-xl bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">BudgetWise</span>
               </Link>
             </div>
 
