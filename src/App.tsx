@@ -32,6 +32,7 @@ import NewsBulletin from "@/pages/NewsBulletin";
 import Splitwise from "@/pages/Splitwise";
 import MultipleDashboards from "@/pages/MultipleDashboards";
 import { VoiceCommandSystem } from "@/components/VoiceCommandSystem";
+import AuthCallback from "@/pages/AuthCallback";
 
 function App() {
   return (
@@ -66,6 +67,7 @@ function App() {
             <Route path="/news-bulletin" element={<NewsBulletin />} />
             <Route path="/splitwise" element={<Splitwise />} />
             <Route path="/multiple-dashboards" element={<MultipleDashboards />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster position="bottom-right" />
